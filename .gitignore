@@ -4,6 +4,8 @@ bin/
 lib/
 pid
 
+app.py
+
 autostart.cgi~
 autostart2.cgi
 autostart2.cgi~
