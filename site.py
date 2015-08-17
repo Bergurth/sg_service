@@ -4,6 +4,7 @@ import json
 import pymongo
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+import re
 
 import urllib
 import urllib2
@@ -47,6 +48,23 @@ class JSONEncoder(json.JSONEncoder):
 from bson import Binary, Code
 from bson.json_util import dumps
 
+
+def login_required(f):
+    # a decorator factory providing a logged in check.
+    def _login_required(*args, **kwargs):
+        sess = cherrypy.session
+        username = sess.get(SESSION_KEY, None)
+        print "=========================="
+        print username
+        if (username != None):
+            return f(*args, **kwargs)
+        else:
+            return "not logged in."
+
+    return _login_required
+
+
+
 class Root(object):
     @cherrypy.expose
     def index(self):
@@ -59,11 +77,39 @@ class Root(object):
         return "hallo"
 
 
+    #http://localhost:12315/user/?username=fred
+    @cherrypy.expose
+    @login_required
+    @cherrypy.tools.allow(methods=['GET'])
+    def user(self, username=None):
+        sess = cherrypy.session
+        uname = sess.get(SESSION_KEY, None)
+        print "BBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+        print uname
+        if (username == uname):
+            uqstring = re.sub('[$,#,<,>,{,}]','',username) # cleaning string
+            output = db.users.find({"username":uqstring})
+            return dumps(output)
+        else:
+            return "not logged in"
+
+
+        """
+    @cherrypy.expose
+    @login_required
+    @cherrypy.tools.allow(methods=['POST'])
+    def user2(self, username=None):
+        return dumps(username)
+        """
+
+
 
 
 class Auth(object):
     @cherrypy.expose
     @cherrypy.tools.allow(methods=['POST'])
+    #@cherrypy.tools.json_out()
+    #@cherrypy.tools.json_in()
     def login(self, username=None, password=None):
         """
         if username is None or password is None:
@@ -78,6 +124,7 @@ class Auth(object):
             raise cherrypy.HTTPRedirect(from_page or "/")
         """
         #Fields = parse_submit(request)
+        #print Fields
         cj = cookielib.CookieJar()
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
         urllib2.install_opener(opener)
@@ -91,7 +138,33 @@ class Auth(object):
         csrf_input = doc.find(attrs = dict(name = 'csrfmiddlewaretoken'))
         csrf_token = csrf_input['value']
 
-        params = urllib.urlencode(dict(username=openid_test_user["username"], password=openid_test_user["password"],csrfmiddlewaretoken=csrf_token))
+        print "hello"
+        #input_json = cherrypy.request.json
+        #print input_json
+
+        cl = cherrypy.request.headers['Content-Length']
+        rawbody = cherrypy.request.body.read(int(cl))
+        ctype = cherrypy.request.headers['content-type']
+        print ctype
+
+        """ this doesnt work
+        jsn1 = cherrypy.request.body.json
+        print jsn1
+        """
+
+
+        """
+        body = simplejson.loads(rawbody)
+        print body
+        """
+        #pre_openid_user = json.loads(rawbody)
+        print rawbody
+        #body = json.loads(rawbody)
+        #print type(rawbody)
+
+
+
+        params = urllib.urlencode(dict(username=username, password=password,csrfmiddlewaretoken=csrf_token))
 
 
 
@@ -116,6 +189,9 @@ class Auth(object):
         print cherrypy.request.login
 
 
+        return {}
+
+
     @cherrypy.expose
     @cherrypy.tools.allow(methods=['GET'])
     def logout(self, from_page="/"):
@@ -128,6 +204,15 @@ class Auth(object):
             print cherrypy.session[SESSION_KEY]
             print cherrypy.request.login
         raise cherrypy.HTTPRedirect(from_page or "/")
+
+
+class Protected(object):
+    @cherrypy.expose
+    @login_required
+    def index(self):
+            return dumps(users)
+
+
 
 
 cherrypy.config.update({
@@ -145,6 +230,7 @@ cherrypy.config.update({
 
 cherrypy.tree.mount(Root(), '/')
 cherrypy.tree.mount(Auth(), '/auth')
+cherrypy.tree.mount(Protected(), '/protected')
 
 
 cherrypy.engine.start()
