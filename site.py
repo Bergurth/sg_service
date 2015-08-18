@@ -48,6 +48,7 @@ class JSONEncoder(json.JSONEncoder):
 from bson import Binary, Code
 from bson.json_util import dumps
 
+import ast
 
 def login_required(f):
     # a decorator factory providing a logged in check.
@@ -67,6 +68,7 @@ def login_required(f):
 
 class Root(object):
     @cherrypy.expose
+    #@cherrypy.tools.json_out()
     def index(self):
             #return users
             return dumps(users)
@@ -84,8 +86,6 @@ class Root(object):
     def user(self, username=None):
         sess = cherrypy.session
         uname = sess.get(SESSION_KEY, None)
-        print "BBBBBBBBBBBBBBBBBBBBBBBBBBBB"
-        print uname
         if (username == uname):
             uqstring = re.sub('[$,#,<,>,{,}]','',username) # cleaning string
             output = db.users.find({"username":uqstring})
@@ -138,33 +138,18 @@ class Auth(object):
         csrf_input = doc.find(attrs = dict(name = 'csrfmiddlewaretoken'))
         csrf_token = csrf_input['value']
 
-        print "hello"
-        #input_json = cherrypy.request.json
-        #print input_json
+   
 
         cl = cherrypy.request.headers['Content-Length']
         rawbody = cherrypy.request.body.read(int(cl))
-        ctype = cherrypy.request.headers['content-type']
-        print ctype
+        
+        
+        d1 = dict(ast.literal_eval(rawbody))
 
-        """ this doesnt work
-        jsn1 = cherrypy.request.body.json
-        print jsn1
-        """
+ 
 
 
-        """
-        body = simplejson.loads(rawbody)
-        print body
-        """
-        #pre_openid_user = json.loads(rawbody)
-        print rawbody
-        #body = json.loads(rawbody)
-        #print type(rawbody)
-
-
-
-        params = urllib.urlencode(dict(username=username, password=password,csrfmiddlewaretoken=csrf_token))
+        params = urllib.urlencode(dict(username=d1['username'], password=d1['password'],csrfmiddlewaretoken=csrf_token))
 
 
 
@@ -183,10 +168,7 @@ class Auth(object):
         # here the sessin is being established
         cherrypy.session[SESSION_KEY] = cherrypy.request.login = openid_user['username']
 
-        print "now the session"
-        print "---------------------"
-        print cherrypy.session[SESSION_KEY]
-        print cherrypy.request.login
+       
 
 
         return {}
