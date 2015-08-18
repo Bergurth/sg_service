@@ -12,7 +12,7 @@ import cookielib
 from BeautifulSoup import BeautifulSoup
 
 
-from localVars import db_port, db_host, openid_url, openid_test_user
+from localVars import db_port, db_host, openid_url_signin, openid_url_signup, openid_test_user
 
 
 if not (db_host == ""):
@@ -108,31 +108,63 @@ class Auth(object):
     @cherrypy.tools.allow(methods=['POST'])
     #@cherrypy.tools.json_out()
     #@cherrypy.tools.json_in()
-    def login(self, username=None, password=None):
+    def login(self, username=None, password=None , password1=None, password2=None, email=None):
         # login in a user. Creating a session key with username.
         cj = cookielib.CookieJar()
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
         urllib2.install_opener(opener)
-        url = openid_url
-        open_url = urllib2.urlopen(url)
-        html = open_url.read()
-        # getting csrf token from openid
-        doc = BeautifulSoup(html)
-        csrf_input = doc.find(attrs = dict(name = 'csrfmiddlewaretoken'))
-        csrf_token = csrf_input['value']
+        
         # getting json
         cl = cherrypy.request.headers['Content-Length']
         rawbody = cherrypy.request.body.read(int(cl))  
-        # making a dictionaty out of raw json string.   
+        # making a dictionaty out of raw json string. TODO make try catch, for when bad json comes  
         d1 = dict(ast.literal_eval(rawbody))
-        params = urllib.urlencode(dict(username=d1['username'], password=d1['password'],csrfmiddlewaretoken=csrf_token))
-        # This is a blocking call for some crazy unknown reason.  TODO FIX
-        post_url = urllib2.urlopen(url, params)
-        openid_user = json.loads(post_url.read())
-        # here the sessin is being established
-        cherrypy.session[SESSION_KEY] = cherrypy.request.login = openid_user['username']
+        #testing
+        print d1
+        
+        if (d1.get('email')):
+            print d1['email']
+        
+        if (not (d1.get('email') and d1.get('password1') and d1.get('password2') and d1.get('username'))):
+            # this is case of regular login.
+            url = openid_url_signin
+            open_url = urllib2.urlopen(url)
+            html = open_url.read()
+            # getting csrf token from openid
+            doc = BeautifulSoup(html)
+            csrf_input = doc.find(attrs = dict(name = 'csrfmiddlewaretoken'))
+            csrf_token = csrf_input['value']
+            params = urllib.urlencode(dict(username=d1['username'], password=d1['password'],csrfmiddlewaretoken=csrf_token))
+            # This is a blocking call for some crazy unknown reason.  TODO FIX
+            post_url = urllib2.urlopen(url, params)
+            # getting user from openid
+            openid_user = json.loads(post_url.read())
+            # here the sessin is being established
+            cherrypy.session[SESSION_KEY] = cherrypy.request.login = openid_user['username']
 
-        return {}
+            return {}
+
+        else:
+            print "new user hittin"
+            url = openid_url_signup
+            open_url = urllib2.urlopen(url)
+            html = open_url.read()
+            # getting csrf token from openid
+            doc = BeautifulSoup(html)
+            csrf_input = doc.find(attrs = dict(name = 'csrfmiddlewaretoken'))
+            csrf_token = csrf_input['value']
+            params = urllib.urlencode(dict(username = d1.get("username"),
+                                           email =  d1.get("email"),
+                                           password1 = d1.get("password1"),
+                                           password2 = d1.get("password2"),
+                                           csrfmiddlewaretoken = csrf_token))
+            # This is a blocking call for some crazy unknown reason.  TODO FIX
+            post_url = urllib2.urlopen(url, params)
+            # getting user from openid
+            openid_user = json.loads(post_url.read())
+            print openid_user
+            # TODO here check if openid return a user, if so make user coresponding here in the sg db
+            return {}
 
 
     @cherrypy.expose
