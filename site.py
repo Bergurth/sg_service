@@ -119,11 +119,6 @@ class Auth(object):
         rawbody = cherrypy.request.body.read(int(cl))  
         # making a dictionaty out of raw json string. TODO make try catch, for when bad json comes  
         d1 = dict(ast.literal_eval(rawbody))
-        #testing
-        print d1
-        
-        if (d1.get('email')):
-            print d1['email']
         
         if (not (d1.get('email') and d1.get('password1') and d1.get('password2') and d1.get('username'))):
             # this is case of regular login.
@@ -141,12 +136,11 @@ class Auth(object):
             openid_user = json.loads(post_url.read())
             # here the sessin is being established
             cherrypy.session[SESSION_KEY] = cherrypy.request.login = openid_user['username']
-
+            # TODO some error handling here.
             return {}
 
         else:
             # this is case of new user.
-            print "new user hittin"
             url = openid_url_signup
             open_url = urllib2.urlopen(url)
             html = open_url.read()
@@ -163,11 +157,12 @@ class Auth(object):
             post_url = urllib2.urlopen(url, params)
             # getting user from openid
             openid_user = json.loads(post_url.read())
-            print openid_user
-            # TODO here check if openid returns a user, if so make user coresponding here in the sg db
+            # here check if openid returns a user, if so make user coresponding here in the sg db
             if "username" in openid_user:
-                # TODO enter user coresponding here in the sg db.
+                # enter user coresponding here in the sg db.
                 db.users.insert(openid_user)
+                #establish the session. 
+                cherrypy.session[SESSION_KEY] = cherrypy.request.login = openid_user['username']
                 return {}
 
             else:
