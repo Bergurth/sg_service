@@ -12,7 +12,7 @@ import cookielib
 from BeautifulSoup import BeautifulSoup
 
 
-from localVars import db_port, db_host, openid_url_signin, openid_url_signup, openid_test_user
+from localVars import db_port, db_host, openid_url_signin, openid_url_signup, openid_request_reset, openid_test_user
 
 
 if not (db_host == ""):
@@ -25,9 +25,6 @@ dbList = connection.database_names()
 
 db = connection.sgtestdb
 #query1 = db.users.find().count()
-users = []
-for user in db.users.find():
-    users.append(user)
 
 
 SESSION_KEY = '_cp_username'
@@ -68,6 +65,10 @@ class Root(object):
     @cherrypy.expose
     #@cherrypy.tools.json_out()
     def index(self):
+            users = []
+            for user in db.users.find():
+                users.append(user)
+
             #return users
             return dumps(users)
             #return "hello this is no default site"
@@ -159,6 +160,7 @@ class Auth(object):
             openid_user = json.loads(post_url.read())
             # here check if openid returns a user, if so make user coresponding here in the sg db
             if "username" in openid_user:
+                print openid_user
                 # enter user coresponding here in the sg db.
                 db.users.insert(openid_user)
                 #establish the session. 
@@ -169,6 +171,46 @@ class Auth(object):
                 #raise cherrypy.HTTPError(status=406, message=openid_user.get('err', {}))
                 raise cherrypy.HTTPError(406)
                 
+    @cherrypy.expose
+    @cherrypy.tools.allow(methods=['POST'])
+    def openid_reset(self, email=None):
+        # TODO perform reset password.
+
+        # from menntg
+        """
+        Perform a reset password feature. Asks for an email address which will be
+        submitted to the openid server
+        """
+        url       = openid_request_reset
+        urlopener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.CookieJar()))
+        urllib2.install_opener(urlopener)
+
+        stream   = urllib2.urlopen(url)
+        document = BeautifulSoup(stream.read())
+        stream.close()
+
+        token  = document.find(attrs={'name': 'csrfmiddlewaretoken'}).get('value')
+        #fields = parse_submit(request)
+        # getting json
+        cl = cherrypy.request.headers['Content-Length']
+        rawbody = cherrypy.request.body.read(int(cl))  
+        # making a dictionaty out of raw json string. TODO make try catch, for when bad json comes  
+        d1 = dict(ast.literal_eval(rawbody))
+
+        params = urllib.urlencode({'email': d1.get('email'), 'csrfmiddlewaretoken': token})
+
+        stream = urllib2.urlopen(url, params)
+        result = stream.read()
+        stream.close()
+
+        try:
+            result = json.loads(result)
+        except ValueError:
+            pass
+
+        return result
+
+
 
 
     @cherrypy.expose
