@@ -55,8 +55,6 @@ def login_required(f):
     def _login_required(*args, **kwargs):
         sess = cherrypy.session
         username = sess.get(SESSION_KEY, None)
-        print "=========================="
-        print username
         if (username != None):
             return f(*args, **kwargs)
         else:
@@ -85,8 +83,8 @@ class Root(object):
     @cherrypy.tools.allow(methods=['GET'])
     def user(self, username=None):
         sess = cherrypy.session
-        uname = sess.get(SESSION_KEY, None)
-        if (username == uname):
+        ses_uname = sess.get(SESSION_KEY, None)
+        if (username == ses_uname):
             uqstring = re.sub('[$,#,<,>,{,}]','',username) # cleaning string
             output = db.users.find({"username":uqstring})
             return dumps(output)
@@ -111,65 +109,28 @@ class Auth(object):
     #@cherrypy.tools.json_out()
     #@cherrypy.tools.json_in()
     def login(self, username=None, password=None):
-        """
-        if username is None or password is None:
-            return self.get_loginform("", from_page=from_page)
-
-        error_msg = check_credentials(username, password)
-        if error_msg:
-            return self.get_loginform(username, error_msg, from_page)
-        else:
-            cherrypy.session[SESSION_KEY] = cherrypy.request.login = username
-            self.on_login(username)
-            raise cherrypy.HTTPRedirect(from_page or "/")
-        """
-        #Fields = parse_submit(request)
-        #print Fields
+        # login in a user. Creating a session key with username.
         cj = cookielib.CookieJar()
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
         urllib2.install_opener(opener)
-        #url = settings.AUTH_OPENID_URLS['signin']
         url = openid_url
-
         open_url = urllib2.urlopen(url)
         html = open_url.read()
-
+        # getting csrf token from openid
         doc = BeautifulSoup(html)
         csrf_input = doc.find(attrs = dict(name = 'csrfmiddlewaretoken'))
         csrf_token = csrf_input['value']
-
-   
-
+        # getting json
         cl = cherrypy.request.headers['Content-Length']
-        rawbody = cherrypy.request.body.read(int(cl))
-        
-        
+        rawbody = cherrypy.request.body.read(int(cl))  
+        # making a dictionaty out of raw json string.   
         d1 = dict(ast.literal_eval(rawbody))
-
- 
-
-
         params = urllib.urlencode(dict(username=d1['username'], password=d1['password'],csrfmiddlewaretoken=csrf_token))
-
-
-
-
-        print params
         # This is a blocking call for some crazy unknown reason.  TODO FIX
         post_url = urllib2.urlopen(url, params)
-
-        print post_url
-
         openid_user = json.loads(post_url.read())
-
-        print openid_user['username']
-        #print openid_user.username
-
         # here the sessin is being established
         cherrypy.session[SESSION_KEY] = cherrypy.request.login = openid_user['username']
-
-       
-
 
         return {}
 
