@@ -145,6 +145,7 @@ class Auth(object):
             return {}
 
         else:
+            # this is case of new user.
             print "new user hittin"
             url = openid_url_signup
             open_url = urllib2.urlopen(url)
@@ -163,8 +164,16 @@ class Auth(object):
             # getting user from openid
             openid_user = json.loads(post_url.read())
             print openid_user
-            # TODO here check if openid return a user, if so make user coresponding here in the sg db
-            return {}
+            # TODO here check if openid returns a user, if so make user coresponding here in the sg db
+            if "username" in openid_user:
+                # TODO enter user coresponding here in the sg db.
+                db.users.insert(openid_user)
+                return {}
+
+            else:
+                #raise cherrypy.HTTPError(status=406, message=openid_user.get('err', {}))
+                raise cherrypy.HTTPError(406)
+                
 
 
     @cherrypy.expose
