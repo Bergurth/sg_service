@@ -82,6 +82,7 @@ class Root(object):
     @cherrypy.expose
     @login_required
     @cherrypy.tools.allow(methods=['GET'])
+    # TODO add case for state of particular game.
     def user(self, username=None):
         sess = cherrypy.session
         ses_uname = sess.get(SESSION_KEY, None)
@@ -91,6 +92,34 @@ class Root(object):
             return dumps(output)
         else:
             return "not logged in"
+
+
+    @cherrypy.expose
+    @login_required
+    @cherrypy.tools.allow(methods=['POST'])
+    def state_update(self, username=None, gamename=None,newstate=None):
+        sess = cherrypy.session
+        ses_uname = sess.get(SESSION_KEY, None)
+        # getting json
+        cl = cherrypy.request.headers['Content-Length']
+        rawbody = cherrypy.request.body.read(int(cl))  
+        # making a dictionaty out of raw json string. TODO make try catch, for when bad json comes  
+        d1 = dict(ast.literal_eval(rawbody))
+        if (d1.get('username') == ses_uname):
+            #carry on
+            if (d1.get('gamename')!=None):
+                #update state of game in db.
+                update_string = "savedGames."+ d1.get('gamename') + ".state"
+                # todo check that newstate closes all parentasis maybe .. maybe with regex.. or do some input cleaning ..
+                # this is maybe an issue of design, could also be a check if newstate is valid json, 
+                # if we decide that state should always be a json string. try if json.loads(d1.get('newstate')) gives error.
+                db.users.update({"username": d1.get('username') },{ "$set" :{update_string:d1.get('newstate')}})
+            else:
+                #bad input
+                raise cherrypy.HTTPError(401)
+        else:
+            #not authorized.
+            raise cherrypy.HTTPError(401)
 
 
         """
@@ -235,7 +264,7 @@ class Protected(object):
 
 
 
-
+# session timeout should probably be longer.
 cherrypy.config.update({
     '/':{'request.dispatch': cherrypy.dispatch.MethodDispatcher(),},
     'environment': 'production',
