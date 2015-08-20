@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Inconsolata">
+
+        <title>sgTestCliet -- updater</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+
+
+
+<script type="text/javascript" src="js/jquery.min.js"></script>
+        <script type="text/javascript" src="js/jquery.hotkeys.js"></script>
+        <script type="text/javascript" src="js/key_status.js"></script>
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <script type="text/javascript" src="js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="js/settings.js"></script>
+
+        <script src="js/underscore-min.js"></script>
+
+        <!-- non basic -->
+        <!--
+        <script src="js/backbone-min.js"></script>
+
+        <script src="js/utils.js"></script>
+
+        <script src="js/models/base.js"></script>
+      <script src="js/models/user.js"></script>
+  -->
+
+
+
+ </head>
+ <body>
+
+
+
+ <header class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="navbar-inner">
+      <div class="container">
+        <div class="navbar-header">
+          <button class="navbar-toggle" type="button" data-toggle="collapse" data-target=".bs-navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand mg-brand" href="/">SgClientTest</a>
+        </div>
+        <div class="collapse navbar-collapse" role="navigation">
+          <div class="auth-group pull-right">
+
+              <button id="login-button" data-toggle="modal" data-target="#auth-form-modal" class="btn btn-danger btn-login">
+                Login<span class="glyphicon glyphicon-user"></span>
+              </button>
+
+              <div class="btn-group">
+                <button class="btn btn-success dropdown-toggle" data-toggle="dropdown">
+                <span class="glyphicon glyphicon-user"></span>
+                  user.username
+                  <span class="caret"></span>
+                </button>
+                <ul class="navbar-right dropdown-menu">
+
+                    <li class="divider"></li>
+                    <li><a href="javascript:;" class="btn-logout">Logout</a></li>
+                </ul>
+            </div>
+
+        </div>
+                          <ul class="nav navbar-nav">
+                              <li>
+                              </li>
+                              <li class="divider-vertical"></li>
+                              <li><a href="/leikskoli">Update Game State</a></li>
+                              <li><a href="/grunnskoli">Get Game State</a></li>
+                              <li><a href="/framhaldsskoli">somthing else</a></li>
+                              <li><a href="/framhaldsfraedsla">Alternative</a></li>
+                          </ul>
+        </div>
+      </div>
+      </div>
+    </header>
+      <div class="container">
+        <div class="row content">
+
+        </div>
+      </div>
+      <!--
+    <footer class="mg-footer" role="contentinfo">
+      <div class="container">
+        <div class="row footer">
+            <div class="col-md-8">
+              <h3>bls bla</h3>
+                  <p>bla
+                  <br /> help at: hjalp@namskra.is.
+                </p>
+          </div>
+          <div class="col-md-3 pull-right">
+              <img style="height:75px; width:auto;" class="pull-right" src="http://media.menntagatt.is/mgoblin_media/media_entries/2/mrn.png"/>
+          </div>
+      </div>
+    </div>
+  </footer>
+-->
+  <div id="auth-form-modal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+       <form class='auth-form'>
+      <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3>Login</h3>
+        </div>
+          <div class="modal-body">
+              <div class="signin-ctrls">
+                  <div class="server-message">
+                      <p><strong></strong></p>
+                  </div>
+
+                  <div class="form-group">
+                      <label class="control-label">Username</label>
+                      <div class="controls">
+                          <input name="username" type="text"/>
+                      </div>
+                  </div>
+
+                  <div class="form-group">
+                      <label class="control-label">gamename</label>
+                      <div class="controls">
+                          <input name="gamename" type="text"/>
+                      </div>
+                  </div>
+
+                  <div class="form-group">
+                      <label class="control-label">newstate</label>
+                      <div class="controls">
+                          <input name="newstate" type="text"/>
+                      </div>
+                  </div>
+              </div>
+              <div class="signup-ctrls">
+                  <div class="form-group">
+                      <label class="control-label">E-Mail</label>
+                      <div class="controls">
+                          <input name="email" type="text"/>
+                          <span class="help-block"></span>
+                      </div>
+                  </div>
+
+                  <div class="form-group">
+                      <label class="control-label">Username</label>
+                      <div class="controls">
+                          <input name="username" type="text"/>
+                          <span class="help-block"></span>
+                      </div>
+                  </div>
+
+                  <div class="form-group">
+                      <label class="control-label">Password</label>
+                      <div class="controls">
+                          <input name="password1" type="password"/>
+                          <span class="help-block"></span>
+                      </div>
+                  </div>
+
+                  <div class="form-group">
+                      <label class="control-label">Confirm Password</label>
+                      <div class="controls">
+                          <input name="password2" type="password"/>
+                          <span class="help-block"></span>
+                      </div>
+                  </div>
+              </div>
+              <div class="password-reset-ctrls">
+
+                  <div id="password-reset-loader" style="display:none">
+                      <img src="img/large-ajax-loader.gif"/>
+                  </div>
+
+                  <div class="server-message">
+                      <p><strong></strong></p>
+                  </div>
+
+                  <div class="form-group">
+                      <label class="control-label">E-Mail</label>
+                      <div class="controls">
+                          <input name="email" type="text"/>
+                          <span class="help-block"></span>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          <div class="modal-footer">
+              <span class="signin-ctrls">
+                  <a id="password-reset-link" href="javascript:;">
+                      Forgot password
+                  </a>
+                  &nbsp; | &nbsp;
+              </span>
+              <a id="signup-link" class="signin-ctrls" href="javascript:;">
+                  Sign up as new user
+              </a>
+              <input id="signin-submit" class="btn btn-success signin-ctrls" type="submit"
+                     value="Login"/>
+
+              <a id="signin-link" class="signup-ctrls" href="javascript:;">
+                  Login as registered user
+              </a>
+              <input id="signup-submit" class="btn btn-success signup-ctrls" type="submit"
+                     value="Sign Up"/>
+
+              <a id="cancel-reset-link" class="password-reset-ctrls" href="javascript:;">
+                  Login as registered user
+              </a>
+              <input id="password-reset-submit" class="btn btn-success password-reset-ctrls" type="submit"
+                     value="Reset Password"/>
+          </div>
+      </div>
+    </form>
+    </div>
+  </div>
+
+
+<!--
+<script src="js/user-login3.js"></script>
+-->
+  <!-- updater script -->
+    <script type="text/javascript">
+
+    $("#login-button").click(_.bind(__onLoginLinkClicked));
+     $('.signup-ctrls').hide();
+     $('.password-reset-ctrls').hide();
+     $(".auth-form").submit(_.bind(__submitUpdate));
+
+    function __onLoginLinkClicked(event) {
+          console.log("__onModalShown")
+          //$('.signup-ctrls').hide();
+          //$('.password-reset-ctrls').hide();
+          $('div.signin-ctrls [name=username]').focus();
+      }
+
+      function __submitUpdate(event) {
+            console.log("inside __submitUpdate");
+            var $form = $(event.currentTarget);
+
+            console.log($form.find("div.signin-ctrls [name=username]").val());
+          jsn = JSON.stringify({
+
+              'username' : $form.find("div.signin-ctrls [name=username]").val(),
+              'gamename': $form.find("div.signin-ctrls [name=gamename]").val(),
+              'newstate': $form.find("div.signin-ctrls [name=newstate]").val()
+          });
+          $.ajax({
+          type: 'POST',
+          contentType: 'application/json',
+          data: jsn,
+          dataType: 'json',
+          //headers:{"Origin" : "chrome-extention://mkhojklkhkdaghjjfdnphfphiaiohkef"},
+          success: function(data){
+          console.log("device control succeeded");
+          },
+        error: function(){
+        console.log("Device control failed");
+        },
+        //processData: false,
+        // origin : chrome-extention://mkhojklkhkdaghjjfdnphfphiaiohkef
+        url: 'http://localhost:12315/state_update'
+        });
+      }
+
+
+
+    </script>
+
+ </body>
+ </html>
