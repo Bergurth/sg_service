@@ -18,6 +18,9 @@ newsite.py
 __pycache__/
 *.py[cod]
 
+
+test_client/img/
+
 # C extensions
 *.so
 

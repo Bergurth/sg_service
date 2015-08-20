@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Inconsolata"> 
+		
+		<title>Troll RPG</title> 
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+
+
+
+<script type="text/javascript" src="js/jquery.min.js"></script>
+        <script type="text/javascript" src="js/jquery.hotkeys.js"></script>
+        <script type="text/javascript" src="js/key_status.js"></script>
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <script type="text/javascript" src="js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="js/settings.js"></script>
+
+        <script src="js/underscore-min.js"></script>
+        <script src="js/backbone-min.js"></script>
+
+        <script src="js/utils.js"></script>
+
+        <script src="js/models/base.js"></script>
+  		<script src="js/models/user.js"></script>
+
+
+
+ </head>
+ <body>
+ 	<div class="collapse navbar-collapse" role="navigation">
+<div class="auth-group pull-right">
+ <button id="login-button" data-toggle="modal" data-target="#auth-form-modal" class="btn btn-danger btn-login">
+                Login <span class="glyphicon glyphicon-user"></span>
+              </button>
+</div>
+</div>
+
+ <div id="auth-form-modal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+       <form class='auth-form'>
+      <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3>Login</h3>
+        </div>
+          <div class="modal-body">
+              <div class="signin-ctrls">
+                  <div class="server-message">
+                      <p><strong></strong></p>
+                  </div>
+
+                  <div class="form-group">
+                      <label class="control-label">Username</label>
+                      <div class="controls">
+                          <input name="username" type="text"/>
+                      </div>
+                  </div>
+
+                  <div class="form-group">
+                      <label class="control-label">Password</label>
+                      <div class="controls">
+                          <input name="password" type="password"/>
+                      </div>
+                  </div>
+              </div>
+              <div class="signup-ctrls">
+                  <div class="form-group">
+                      <label class="control-label">E-Mail</label>
+                      <div class="controls">
+                          <input name="email" type="text"/>
+                          <span class="help-block"></span>
+                      </div>
+                  </div>
+
+                  <div class="form-group">
+                      <label class="control-label">Username</label>
+                      <div class="controls">
+                          <input name="username" type="text"/>
+                          <span class="help-block"></span>
+                      </div>
+                  </div>
+
+                  <div class="form-group">
+                      <label class="control-label">Password</label>
+                      <div class="controls">
+                          <input name="password1" type="password"/>
+                          <span class="help-block"></span>
+                      </div>
+                  </div>
+
+                  <div class="form-group">
+                      <label class="control-label">Confirm Password</label>
+                      <div class="controls">
+                          <input name="password2" type="password"/>
+                          <span class="help-block"></span>
+                      </div>
+                  </div>
+              </div>
+              <div class="password-reset-ctrls">
+
+                  <div id="password-reset-loader" style="display:none">
+                      <img src="img/large-ajax-loader.gif"/>
+                  </div>
+
+                  <div class="server-message">
+                      <p><strong></strong></p>
+                  </div>
+
+                  <div class="form-group">
+                      <label class="control-label">E-Mail</label>
+                      <div class="controls">
+                          <input name="email" type="text"/>
+                          <span class="help-block"></span>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          <div class="modal-footer">
+              <span class="signin-ctrls">
+                  <a id="password-reset-link" href="javascript:;">
+                      Forgot password
+                  </a>
+                  &nbsp; | &nbsp;
+              </span>
+              <a id="signup-link" class="signin-ctrls" href="javascript:;">
+                  Sign up as new user
+              </a>
+              <input id="signin-submit" class="btn btn-success signin-ctrls" type="submit"
+                     value="Login"/>
+
+              <a id="signin-link" class="signup-ctrls" href="javascript:;">
+                  Login as registered user
+              </a>
+              <input id="signup-submit" class="btn btn-success signup-ctrls" type="submit"
+                     value="Sign Up"/>
+
+              <a id="cancel-reset-link" class="password-reset-ctrls" href="javascript:;">
+                  Login as registered user
+              </a>
+              <input id="password-reset-submit" class="btn btn-success password-reset-ctrls" type="submit"
+                     value="Reset Password"/>
+          </div>
+      </div>
+    </form>
+    </div>
+  </div>
+
+<script src="js/user-login2.js"></script>
+  <script>
+  !function($) {
+     new UserLogin.View({
+        el   : $('#auth-form-modal'),
+        model: new UserLogin.Model()
+     });
+  } (jQuery);
+  </script>
+
+
+ </body>
+ </html>

@@ -133,13 +133,17 @@ class Root(object):
 
 
 
+
 class Auth(object):
     @cherrypy.expose
-    @cherrypy.tools.allow(methods=['POST'])
+    #@cherrypy.tools.allow(methods=['POST'])
     #@cherrypy.tools.json_out()
     #@cherrypy.tools.json_in()
     def login(self, username=None, password=None , password1=None, password2=None, email=None):
         # login in a user. Creating a session key with username.
+        print "login started"
+        cherrypy.response.headers["Access-Control-Allow-Origin"] = "*"
+        cherrypy.response.headers["Access-Control-Allow-Credentials"] = "*"
         cj = cookielib.CookieJar()
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
         urllib2.install_opener(opener)
@@ -149,7 +153,7 @@ class Auth(object):
         rawbody = cherrypy.request.body.read(int(cl))  
         # making a dictionaty out of raw json string. TODO make try catch, for when bad json comes  
         d1 = dict(ast.literal_eval(rawbody))
-        
+        print d1
         if (not (d1.get('email') and d1.get('password1') and d1.get('password2') and d1.get('username'))):
             # this is case of regular login.
             url = openid_url_signin
@@ -261,9 +265,13 @@ class Protected(object):
     @login_required
     def index(self):
             return dumps(users)
-
-
-
+"""
+def CORS():
+    print "corsing"
+    cherrypy.response.headers["Access-Control-Allow-Origin"] = "*"
+"""
+import cherrypy_cors
+cherrypy_cors.install()
 # session timeout should probably be longer.
 cherrypy.config.update({
     '/':{'request.dispatch': cherrypy.dispatch.MethodDispatcher(),},
@@ -273,7 +281,16 @@ cherrypy.config.update({
     'server.socket_port': 12315,
     'tools.sessions.on': True,
     'tools.sessions.persistent': True,
-    'tools.sessions.timeout': 60
+    'tools.sessions.timeout': 60,
+
+    'tools.response_headers.on': True,
+    'tools.response_headers.headers': [('Content-Type', 'text/plain')],
+        
+    #'tools.staticdir.on': True,
+    #'cors.expose.on' : True,
+
+    #'tools.CORS.on': True,
+    #'tools.response_headers.on': True,
 })
 
 
