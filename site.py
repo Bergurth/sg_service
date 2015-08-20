@@ -96,14 +96,15 @@ class Root(object):
 
     @cherrypy.expose
     @login_required
-    @cherrypy.tools.allow(methods=['POST'])
+    #@cherrypy.tools.allow(methods=['POST'])
     def state_update(self, username=None, gamename=None,newstate=None):
+        print "state_update called"
         sess = cherrypy.session
         ses_uname = sess.get(SESSION_KEY, None)
         # getting json
         cl = cherrypy.request.headers['Content-Length']
-        rawbody = cherrypy.request.body.read(int(cl))  
-        # making a dictionaty out of raw json string. TODO make try catch, for when bad json comes  
+        rawbody = cherrypy.request.body.read(int(cl))
+        # making a dictionaty out of raw json string. TODO make try catch, for when bad json comes
         d1 = dict(ast.literal_eval(rawbody))
         if (d1.get('username') == ses_uname):
             #carry on
@@ -111,7 +112,7 @@ class Root(object):
                 #update state of game in db.
                 update_string = "savedGames."+ d1.get('gamename') + ".state"
                 # todo check that newstate closes all parentasis maybe .. maybe with regex.. or do some input cleaning ..
-                # this is maybe an issue of design, could also be a check if newstate is valid json, 
+                # this is maybe an issue of design, could also be a check if newstate is valid json,
                 # if we decide that state should always be a json string. try if json.loads(d1.get('newstate')) gives error.
                 db.users.update({"username": d1.get('username') },{ "$set" :{update_string:d1.get('newstate')}})
             else:
@@ -147,13 +148,14 @@ class Auth(object):
         cj = cookielib.CookieJar()
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
         urllib2.install_opener(opener)
-        
+
+        print "just bfr getting json"
         # getting json
         cl = cherrypy.request.headers['Content-Length']
-        rawbody = cherrypy.request.body.read(int(cl))  
-        # making a dictionaty out of raw json string. TODO make try catch, for when bad json comes  
+        rawbody = cherrypy.request.body.read(int(cl))
+        # making a dictionaty out of raw json string. TODO make try catch, for when bad json comes
         d1 = dict(ast.literal_eval(rawbody))
-        print d1
+        print "after dict made"
         if (not (d1.get('email') and d1.get('password1') and d1.get('password2') and d1.get('username'))):
             # this is case of regular login.
             url = openid_url_signin
@@ -196,14 +198,14 @@ class Auth(object):
                 print openid_user
                 # enter user coresponding here in the sg db.
                 db.users.insert(openid_user)
-                #establish the session. 
+                #establish the session.
                 cherrypy.session[SESSION_KEY] = cherrypy.request.login = openid_user['username']
                 return {}
 
             else:
                 #raise cherrypy.HTTPError(status=406, message=openid_user.get('err', {}))
                 raise cherrypy.HTTPError(406)
-                
+
     @cherrypy.expose
     @cherrypy.tools.allow(methods=['POST'])
     def openid_reset(self, email=None):
@@ -226,8 +228,8 @@ class Auth(object):
         #fields = parse_submit(request)
         # getting json
         cl = cherrypy.request.headers['Content-Length']
-        rawbody = cherrypy.request.body.read(int(cl))  
-        # making a dictionaty out of raw json string. TODO make try catch, for when bad json comes  
+        rawbody = cherrypy.request.body.read(int(cl))
+        # making a dictionaty out of raw json string. TODO make try catch, for when bad json comes
         d1 = dict(ast.literal_eval(rawbody))
 
         params = urllib.urlencode({'email': d1.get('email'), 'csrfmiddlewaretoken': token})
@@ -272,6 +274,24 @@ def CORS():
 """
 import cherrypy_cors
 cherrypy_cors.install()
+
+def CORS():
+    cherrypy.response.headers["Access-Control-Allow-Origin"] = "*"
+
+cherrypy.tools.CORS = cherrypy.Tool('before_finalize', CORS)
+
+# static served, login test
+import os
+cwd = os.getcwd()
+path_client = os.path.abspath(os.path.dirname('/test_client/test_client_basic.html'))
+stat_path = cwd + path_client
+print stat_path
+
+class Static(object):pass
+
+class Supdate(object):pass
+
+
 # session timeout should probably be longer.
 cherrypy.config.update({
     '/':{'request.dispatch': cherrypy.dispatch.MethodDispatcher(),},
@@ -285,11 +305,11 @@ cherrypy.config.update({
 
     'tools.response_headers.on': True,
     'tools.response_headers.headers': [('Content-Type', 'text/plain')],
-        
-    #'tools.staticdir.on': True,
-    #'cors.expose.on' : True,
 
-    #'tools.CORS.on': True,
+    #'tools.staticdir.on': True,
+    'cors.expose.on' : True,
+
+    'tools.CORS.on': True,
     #'tools.response_headers.on': True,
 })
 
@@ -298,6 +318,18 @@ cherrypy.config.update({
 cherrypy.tree.mount(Root(), '/')
 cherrypy.tree.mount(Auth(), '/auth')
 cherrypy.tree.mount(Protected(), '/protected')
+
+cherrypy.tree.mount(Static(), '/static',config={'/': {
+                'tools.staticdir.on': True,
+                'tools.staticdir.dir': stat_path,
+                'tools.staticdir.index': 'test_client_basic.html',
+            },})
+
+cherrypy.tree.mount(Supdate(), '/supdate',config={'/': {
+                'tools.staticdir.on': True,
+                'tools.staticdir.dir': stat_path,
+                'tools.staticdir.index': 'updater.html',
+            },})
 
 
 cherrypy.engine.start()
