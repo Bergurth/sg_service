@@ -72,47 +72,30 @@
         });
       }
 
-        function submitAsSignIn($form) {
-          console.log($form);
-          console.log($form.find("div.signin-ctrls [name=username]").val());
-          jsn = JSON.stringify({
-              'username': $form.find("div.signin-ctrls [name=username]").val(),
-              'password': $form.find("div.signin-ctrls [name=password]").val()
-          });
-          // make ajax call
-          /*
-          $.ajax({
-          type: 'POST',
-          contentType: 'application/json',
-          data: jsn,
-          dataType: 'json',
-          success: function(data){
-          console.log("device control succeeded");
-          },
-        error: function(){
-        console.log("Device control failed");
-        },
-        //processData: false,
-
-        url: 'http://sgtest.bergur.biz/auth/login'
+    function submitAsSignIn($form) {
+        //console.log($form);
+        //console.log($form.find("div.signin-ctrls [name=username]").val());
+        data = JSON.stringify({
+          'username': $form.find("div.signin-ctrls [name=username]").val(),
+          'password': $form.find("div.signin-ctrls [name=password]").val()
         });
-    */
-        console.log(jsn)
+
+        //console.log(data)
         $.ajax({
-          type: 'POST',
-          contentType: 'application/json',
-          data: jsn,
-          dataType: 'json',
-          //headers:{"Origin" : "chrome-extention://mkhojklkhkdaghjjfdnphfphiaiohkef"},
-          success: function(data){
-          console.log("device control succeeded");
-          },
-        error: function(){
-        console.log("Device control failed");
-        },
+            url: 'http://localhost:12315/auth/login',
+            type: 'POST',
+            contentType: 'application/json',
+            data: data,
+            //headers:{"Origin" : "chrome-extention://mkhojklkhkdaghjjfdnphfphiaiohkef"},
+            success: function(data){
+                console.log(data);
+                console.log("device control succeeded");
+            },
+            error: function(){
+                console.log("Device control failed");
+            },
         //processData: false,
         // origin : chrome-extention://mkhojklkhkdaghjjfdnphfphiaiohkef
-        url: 'http://localhost:12315/auth/login'
         });
     /*
     $.ajax({

@@ -30,18 +30,6 @@ db = connection.sgtestdb
 SESSION_KEY = '_cp_username'
 
 
-"""
-
-class JSONEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, ObjectId):
-            return str(o)
-        return json.JSONEncoder.default(self, o)
-
-"""
-
-#print users
-
 from bson import Binary, Code
 from bson.json_util import dumps
 
@@ -81,7 +69,7 @@ class Root(object):
     #http://localhost:12315/user/?username=fred
     @cherrypy.expose
     @login_required
-    @cherrypy.tools.allow(methods=['GET'])
+    #@cherrypy.tools.allow(methods=['GET'])
     # TODO add case for state of particular game.
     def user(self, username=None):
         sess = cherrypy.session
@@ -131,20 +119,24 @@ class Root(object):
         return dumps(username)
         """
 
-
-
-
-
 class Auth(object):
     @cherrypy.expose
     #@cherrypy.tools.allow(methods=['POST'])
     #@cherrypy.tools.json_out()
-    #@cherrypy.tools.json_in()
-    def login(self, username=None, password=None , password1=None, password2=None, email=None):
+    @cherrypy.tools.json_in()
+    def login(self):
         # login in a user. Creating a session key with username.
         print "login started"
-        cherrypy.response.headers["Access-Control-Allow-Origin"] = "*"
-        cherrypy.response.headers["Access-Control-Allow-Credentials"] = "*"
+        #cherrypy.response.headers["Access-Control-Allow-Origin"] = "*"
+        #cherrypy.response.headers["Access-Control-Allow-Credentials"] = "*"
+        #cj = cookielib.CookieJar()
+        #opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+        #urllib2.install_opener(opener)
+        #print str(cherrypy.request.json)
+        # line below works !
+        #return "server secret"
+
+        """ following doesnt work
         cj = cookielib.CookieJar()
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
         urllib2.install_opener(opener)
@@ -157,6 +149,39 @@ class Auth(object):
         d1 = dict(ast.literal_eval(rawbody))
         print "after dict made"
         print d1['username']
+
+        return "server secret" + d1['username']
+        """
+        """  doing this triggers a CORS complaint, like CORS is not in effect
+        returnString = str(cherrypy.request.json) + "server secret"
+        return returnString
+        """
+        # this works, proving in effect,CORS access and returing whats posted + some server stuff
+        try:
+            return str(cherrypy.request.json) + "server secret"
+        except:
+            print "failed"
+
+        """
+        Cors seems to require try except clause inside the fuctio to allow the request..
+        getting the open_id user with:
+        post_url = urllib2.urlopen(url, params)
+        does not somehow agree with being inside such a clause
+        .. may have somthing to do wit it being 'blocking call for some craxy unknown reason'
+        """
+
+
+        # getting json
+        #d1 = dict(cherrypy.request.json)
+        #print d1
+        #d1 = str(cherrypy.request.json)
+        return "cherrypy.request.json"
+
+        #cl = cherrypy.request.headers['Content-Length']
+        #rawbody = cherrypy.request.body.read(int(cl))
+        # making a dictionaty out of raw json string. TODO make try catch, for when bad json comes
+        d1 = dict(ast.literal_eval(rawbody))
+        print "after dict made"
         if (not (d1.get('email') and d1.get('password1') and d1.get('password2') and d1.get('username'))):
             # this is case of regular login.
             url = openid_url_signin
@@ -167,14 +192,8 @@ class Auth(object):
             csrf_input = doc.find(attrs = dict(name = 'csrfmiddlewaretoken'))
             csrf_token = csrf_input['value']
             params = urllib.urlencode(dict(username=d1['username'], password=d1['password'],csrfmiddlewaretoken=csrf_token))
-
-            print url
-            print params
             # This is a blocking call for some crazy unknown reason.  TODO FIX
-            try:
-                post_url = urllib2.urlopen(url, params)
-            except:
-                pass
+            post_url = urllib2.urlopen(url, params)
             # getting user from openid
             openid_user = json.loads(post_url.read())
             # here the sessin is being established
@@ -252,9 +271,6 @@ class Auth(object):
 
         return result
 
-
-
-
     @cherrypy.expose
     @cherrypy.tools.allow(methods=['GET'])
     def logout(self, from_page="/"):
@@ -274,16 +290,14 @@ class Protected(object):
     @login_required
     def index(self):
             return dumps(users)
-"""
-def CORS():
-    print "corsing"
-    cherrypy.response.headers["Access-Control-Allow-Origin"] = "*"
+
 """
 import cherrypy_cors
 cherrypy_cors.install()
-
+"""
 def CORS():
     cherrypy.response.headers["Access-Control-Allow-Origin"] = "*"
+    cherrypy.response.headers["Access-Control-Allow-Headers"] = "Origin, X-Requested-With, Content-Type, Accept"
 
 cherrypy.tools.CORS = cherrypy.Tool('before_finalize', CORS)
 
@@ -300,31 +314,35 @@ class Supdate(object):pass
 
 
 # session timeout should probably be longer.
-cherrypy.config.update({
-    '/':{'request.dispatch': cherrypy.dispatch.MethodDispatcher(),},
-    'environment': 'production',
-    'log.screen': False,
-    'server.socket_host': '127.0.0.1',
-    'server.socket_port': 12315,
-    'tools.sessions.on': True,
-    'tools.sessions.persistent': True,
-    'tools.sessions.timeout': 60,
+config = {
+    'global':{
+        'server.socket_host': '127.0.0.1',
+        'server.socket_port': 12315,
+        'tools.CORS.on': True,
+    },
+    '/':{
+        #'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+        'environment': 'production',
+        'log.screen': False,
+        'tools.sessions.on': True,
+        'tools.sessions.persistent': True,
+        'tools.sessions.timeout': 60,
 
-    'tools.response_headers.on': True,
-    'tools.response_headers.headers': [('Content-Type', 'text/plain')],
+        #'tools.response_headers.on': True,
+        #'tools.response_headers.headers': [('Content-Type', 'text/plain')],
 
-    #'tools.staticdir.on': True,
-    'cors.expose.on' : True,
+        #'tools.staticdir.on': True,
+        #'cors.expose.on' : True,
 
-    'tools.CORS.on': True,
-    #'tools.response_headers.on': True,
-})
+        #'tools.response_headers.on': True,
+    },
+}
 
+cherrypy.config.update(config)
 
-
-cherrypy.tree.mount(Root(), '/')
-cherrypy.tree.mount(Auth(), '/auth')
-cherrypy.tree.mount(Protected(), '/protected')
+cherrypy.tree.mount(Root(), '/', config=config)
+cherrypy.tree.mount(Auth(), '/auth', config=config)
+#cherrypy.tree.mount(Protected(), '/protected', config=config)
 
 cherrypy.tree.mount(Static(), '/static',config={'/': {
                 'tools.staticdir.on': True,
