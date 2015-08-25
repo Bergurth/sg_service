@@ -261,6 +261,7 @@ class Auth(object):
             return {}
 
         else:
+            print "create hittin"
             # this is case of new user.
             url = openid_url_signup
             open_url = urllib2.urlopen(url)
@@ -269,13 +270,21 @@ class Auth(object):
             doc = BeautifulSoup(html)
             csrf_input = doc.find(attrs = dict(name = 'csrfmiddlewaretoken'))
             csrf_token = csrf_input['value']
-            params = urllib.urlencode(dict(username = d1.get("username"),
-                                           email =  d1.get("email"),
-                                           password1 = d1.get("password1"),
-                                           password2 = d1.get("password2"),
+            print "oken gotten"
+            params = urllib.urlencode(dict(username = d1['username'],
+                                           email =  d1['email'],
+                                           password1 = d1['password1'],
+                                           password2 = d1['password2'],
                                            csrfmiddlewaretoken = csrf_token))
+
+            print params
+            print "just before crazy blocking call"
             # This is a blocking call for some crazy unknown reason.  TODO FIX
-            post_url = urllib2.urlopen(url, params)
+            try:
+                post_url = urllib2.urlopen(url, params)
+            except:
+                pass
+            print "just after"
             # getting user from openid
             openid_user = json.loads(post_url.read())
             # here check if openid returns a user, if so make user coresponding here in the sg db
@@ -288,6 +297,7 @@ class Auth(object):
                 return {}
 
             else:
+                print "openid user not hittin"
                 #raise cherrypy.HTTPError(status=406, message=openid_user.get('err', {}))
                 raise cherrypy.HTTPError(406)
 
@@ -398,10 +408,38 @@ config = {
     },
 }
 
+
+configAuth = {
+    'global':{
+        'server.socket_host': '127.0.0.1',
+        'server.socket_port': 12315,
+
+    },
+    '/':{
+        #'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+        'environment': 'production',
+        'log.screen': False,
+        'tools.sessions.on': True,
+        'tools.sessions.persistent': True,
+        'tools.sessions.timeout': 60,
+
+
+        #'tools.response_headers.on': True,
+        #'tools.response_headers.headers': [('Content-Type', 'text/plain')],
+
+        #'tools.staticdir.on': True,
+        #'cors.expose.on' : True,
+
+        #'tools.response_headers.on': True,
+    },
+}
+
+
+
 cherrypy.config.update(config)
 
 cherrypy.tree.mount(Root(), '/', config=config)
-cherrypy.tree.mount(Auth(), '/auth', config=config)
+cherrypy.tree.mount(Auth(), '/auth', config=configAuth)
 #cherrypy.tree.mount(Protected(), '/protected', config=config)
 
 cherrypy.tree.mount(Static(), '/static',config={'/': {
