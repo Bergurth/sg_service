@@ -41,9 +41,24 @@ def login_required(f):
         sess = cherrypy.session
         username = sess.get(SESSION_KEY, None)
         if (username != None):
+            print "unae hittin"
             return f(*args, **kwargs)
         else:
-            return "not logged in."
+            return "not logged in.   maaan!"
+
+    return _login_required
+
+
+def login_required_json(f):
+    # a decorator factory providing a logged in check.
+    def _login_required():
+        sess = cherrypy.session
+        username = sess.get(SESSION_KEY, None)
+        if (username != None):
+            print "unae hittin"
+            return f()
+        else:
+            return "not logged in.   maaan!"
 
     return _login_required
 
@@ -84,9 +99,21 @@ class Root(object):
 
     @cherrypy.expose
     #@login_required
+    #@login_required_json
     #@cherrypy.tools.allow(methods=['POST'])
     @cherrypy.tools.json_in()
     def state_update(self):
+        # implements ow login required ..
+        """   -- try to get session test
+        try:
+            sess = cherrypy.session
+            ses_uname = sess.get(SESSION_KEY, None)
+            return ses_uname
+        except Exception as e:
+            print str(e)
+            return "failed"
+        """
+
         """
         try:
             sess = cherrypy.session
@@ -120,12 +147,60 @@ class Root(object):
         """
         try:
             data = cherrypy.request.json
+            print type(data)
             username = data["username"]
             newstate = data["newstate"]
             gamename = data["gamename"]
-            update_string = "savedGames."+ gamename + ".state"
-            db.users.update({"username": username },{ "$set" :{update_string:newstate}})
-            return "success"
+            # next two lines test, working thing..
+            #update_string = "savedGames."+ gamename + ".state"
+            #db.users.update({"username": username },{ "$set" :{update_string:newstate}})
+
+            sess = cherrypy.session
+            ses_uname = sess.get(SESSION_KEY, None)
+            # following works
+            #return "after db update " + ses_uname
+            if ses_uname:
+                if (username == ses_uname):
+                    if gamename:
+                        update_string = "savedGames."+ gamename + ".state"
+                        db.users.update({"username": username },{ "$set" :{update_string:newstate}})
+                        return "after db update " + ses_uname + " " + gamename
+                    else:
+                        #bad input
+                        raise cherrypy.HTTPError(401)
+                else:
+                    #not authorized.
+                    raise cherrypy.HTTPError(401)
+            else:
+                raise cherrypy.HTTPError(401)
+            """
+            try:
+                sess = cherrypy.session
+                ses_uname = sess.get(SESSION_KEY, None)
+            except Exception as e1:
+                print str(e1)
+                return "getting session failed"
+            """
+
+            """ adapted should work part
+            if (username == ses_uname):
+                print "first if passes"
+                if (gamename!=None):
+                    print "second if .."
+                    update_string = "savedGames."+ gamename + ".state"
+                    # todo check that newstate closes all parentasis maybe .. maybe with regex.. or do some input cleaning ..
+                    # this is maybe an issue of design, could also be a check if newstate is valid json,
+                    # if we decide that state should always be a json string. try if json.loads(d1.get('newstate')) gives error.
+
+                    db.users.update({"username": username },{ "$set" :{update_string:newstate}})
+                    return "success"
+                else:
+                    #bad input
+                    raise cherrypy.HTTPError(401)
+            else:
+                #not authorized.
+                raise cherrypy.HTTPError(401)
+            """
         except Exception as e:
             print str(e)
             return "failed"
@@ -142,20 +217,12 @@ class Auth(object):
     @cherrypy.expose
     #@cherrypy.tools.allow(methods=['POST'])
     #@cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    def login(self):
+    #@cherrypy.tools.json_in()
+    def login(self, username=None, password=None , password1=None, password2=None, email=None):
         # login in a user. Creating a session key with username.
         print "login started"
-        #cherrypy.response.headers["Access-Control-Allow-Origin"] = "*"
-        #cherrypy.response.headers["Access-Control-Allow-Credentials"] = "*"
-        #cj = cookielib.CookieJar()
-        #opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-        #urllib2.install_opener(opener)
-        #print str(cherrypy.request.json)
-        # line below works !
-        #return "server secret"
-
-        """ following doesnt work
+        cherrypy.response.headers["Access-Control-Allow-Origin"] = "*"
+        cherrypy.response.headers["Access-Control-Allow-Credentials"] = "*"
         cj = cookielib.CookieJar()
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
         urllib2.install_opener(opener)
@@ -168,41 +235,6 @@ class Auth(object):
         d1 = dict(ast.literal_eval(rawbody))
         print "after dict made"
         print d1['username']
-
-        return "server secret" + d1['username']
-        """
-        """  doing this triggers a CORS complaint, like CORS is not in effect
-        returnString = str(cherrypy.request.json) + "server secret"
-        return returnString
-        """
-        # this works, proving in effect,CORS access and returing whats posted + some server stuff
-        try:
-            sess = cherrypy.session
-            username = sess.get(SESSION_KEY, None)
-            return str(cherrypy.request.json) + "server secret"
-        except:
-            print "failed"
-
-        """
-        Cors seems to require try except clause inside the fuctio to allow the request..
-        Getting the open_id user with:
-        post_url = urllib2.urlopen(url, params)
-        does not somehow agree with being inside such a clause
-        .. may have somthing to do wit it being 'blocking call for some craxy unknown reason'
-        """
-
-
-        # getting json
-        #d1 = dict(cherrypy.request.json)
-        #print d1
-        #d1 = str(cherrypy.request.json)
-        return "cherrypy.request.json"
-
-        #cl = cherrypy.request.headers['Content-Length']
-        #rawbody = cherrypy.request.body.read(int(cl))
-        # making a dictionaty out of raw json string. TODO make try catch, for when bad json comes
-        d1 = dict(ast.literal_eval(rawbody))
-        print "after dict made"
         if (not (d1.get('email') and d1.get('password1') and d1.get('password2') and d1.get('username'))):
             # this is case of regular login.
             url = openid_url_signin
@@ -213,8 +245,14 @@ class Auth(object):
             csrf_input = doc.find(attrs = dict(name = 'csrfmiddlewaretoken'))
             csrf_token = csrf_input['value']
             params = urllib.urlencode(dict(username=d1['username'], password=d1['password'],csrfmiddlewaretoken=csrf_token))
+
+            print url
+            print params
             # This is a blocking call for some crazy unknown reason.  TODO FIX
-            post_url = urllib2.urlopen(url, params)
+            try:
+                post_url = urllib2.urlopen(url, params)
+            except:
+                pass
             # getting user from openid
             openid_user = json.loads(post_url.read())
             # here the sessin is being established
