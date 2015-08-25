@@ -351,7 +351,8 @@ class Auth(object):
             #self.on_logout(username)
             print cherrypy.session[SESSION_KEY]
             print cherrypy.request.login
-        raise cherrypy.HTTPRedirect(from_page or "/")
+        #raise cherrypy.HTTPRedirect(from_page or "/static")
+        raise cherrypy.HTTPRedirect("/static")
 
 
 class Protected(object):

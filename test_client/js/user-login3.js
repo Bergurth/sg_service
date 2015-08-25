@@ -11,6 +11,7 @@
 
      $(".auth-form").submit(_.bind(this.__onFormSubmitted, this));
      $(".btn-login").click(_.bind(__onLoginButtonClicked));
+     $('#password-reset-link').click(_.bind(__onPasswordResetLinkClicked));
 
      function __onLoginLinkClicked(event) {
           console.log("__onModalShown")
@@ -72,6 +73,32 @@
         });
       }
 
+      function submitAsReset($form) {
+        jsn = JSON.stringify({'email': $form.find('div.password-reset-ctrls [name=email]').val()});
+
+        $.ajax({
+            url: 'http://localhost:12315/auth/openid_reset',
+            type: 'POST',
+            contentType: 'application/json',
+            data: jsn,
+            //headers:{"Origin" : "chrome-extention://mkhojklkhkdaghjjfdnphfphiaiohkef"},
+            success: function(data){
+                console.log(data);
+                console.log("device control succeeded");
+            },
+            error: function(){
+                console.log("Device control failed");
+            },
+        //processData: false,
+        // origin : chrome-extention://mkhojklkhkdaghjjfdnphfphiaiohkef
+        });
+        /*
+          this.model.resetPassword({
+              'email': $form.find('div.password-reset-ctrls [name=email]').val()
+          });
+        */
+      }
+
     function submitAsSignIn($form) {
         //console.log($form);
         //console.log($form.find("div.signin-ctrls [name=username]").val());
@@ -97,28 +124,21 @@
         //processData: false,
         // origin : chrome-extention://mkhojklkhkdaghjjfdnphfphiaiohkef
         });
-    /*
-    $.ajax({
-  type: 'POST',
-  url: 'http://sgtest.bergur.biz/auth/login',
-  data: jsn,
-  error: function(e) {
-    console.log(e);
-  },
-  dataType: "json",
-  contentType: "application/json"
-});
-*/
 
+       // url: 'http://sgtest.bergur.biz/auth/login',
       //$.post('http://sgtest.bergur.biz/auth/login',jsn,function(data,status){console.log("Data: " + data + " \nStatus: " + status)});
       //$.post('http://localhost:12315/auth/login',jsn,function(data,status){console.log("Data: " + data + " \nStatus: " + status)});
       //$.postJSON('http://localhost:12315/auth/login',jsn,function(data,status){console.log("Data: " + data + " \nStatus: " + status)});
-          /*
-          this.model.loginUser({
-              'username': $form.find("div.signin-ctrls [name=username]").val(),
-              'password': $form.find("div.signin-ctrls [name=password]").val()
-          });
-     */
+
+      }
+
+
+       function __onPasswordResetLinkClicked(event) {
+          event.preventDefault();
+
+          this.$('.signin-ctrls, .signup-ctrls').hide();
+          this.$('.password-reset-ctrls').fadeIn()
+              .find('[name=email]').focus();
       }
 
 
