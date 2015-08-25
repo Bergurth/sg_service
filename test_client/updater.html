@@ -237,31 +237,30 @@
       }
 
       function __submitUpdate(event) {
-            console.log("inside __submitUpdate");
-            var $form = $(event.currentTarget);
+        var $form = $(event.currentTarget);
 
-            console.log($form.find("div.signin-ctrls [name=username]").val());
-          jsn = JSON.stringify({
+        jsn = JSON.stringify({
+          'username' : $form.find("div.signin-ctrls [name=username]").val(),
+          'gamename': $form.find("div.signin-ctrls [name=gamename]").val(),
+          'newstate': $form.find("div.signin-ctrls [name=newstate]").val()
+        });
 
-              'username' : $form.find("div.signin-ctrls [name=username]").val(),
-              'gamename': $form.find("div.signin-ctrls [name=gamename]").val(),
-              'newstate': $form.find("div.signin-ctrls [name=newstate]").val()
-          });
-          $.ajax({
-          type: 'POST',
-          contentType: 'application/json',
-          data: jsn,
-          dataType: 'json',
-          //headers:{"Origin" : "chrome-extention://mkhojklkhkdaghjjfdnphfphiaiohkef"},
-          success: function(data){
-          console.log("device control succeeded");
-          },
-        error: function(){
-        console.log("Device control failed");
-        },
+        $.ajax({
+            url: 'http://localhost:12315/state_update',
+            type: 'POST',
+            contentType: 'application/json',
+            data: jsn,
+            //headers:{"Origin" : "chrome-extention://mkhojklkhkdaghjjfdnphfphiaiohkef"},
+            success: function(data){
+                console.log(data);
+                console.log("device control succeeded");
+            },
+            error: function(){
+            //console.log(data);
+                console.log("Device control failed");
+            },
         //processData: false,
         // origin : chrome-extention://mkhojklkhkdaghjjfdnphfphiaiohkef
-        url: 'http://localhost:12315/state_update'
         });
       }
 
