@@ -105,6 +105,9 @@ class Root(object):
     @cherrypy.tools.json_in()
     def state_update(self):
         # implements ow login required ..
+
+        cherrypy.response.headers["Access-Control-Allow-Origin"] = "*"
+        cherrypy.response.headers["Access-Control-Allow-Credentials"] = "*"
         """   -- try to get session test
         try:
             sess = cherrypy.session
@@ -159,7 +162,7 @@ class Root(object):
             try:
                 sess = cherrypy.session
                 ses_uname = sess.get(SESSION_KEY, None)
-                return username + " server secret"
+                #return ses_uname + " server secret"
             except Exception as fart:
                 print str(fart)
                 return "failed"
@@ -500,6 +503,7 @@ config = {
         'tools.sessions.on': True,
         'tools.sessions.persistent': True,
         'tools.sessions.timeout': 60,
+        'tools.sessions.clean_freq': None,
         'tools.CORS.on': True,
         # cherrypy_cors
         #'cors.expose.on': True,
