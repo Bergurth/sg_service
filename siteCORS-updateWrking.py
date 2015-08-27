@@ -147,6 +147,7 @@ class Root(object):
             raise cherrypy.HTTPError(401)
         """
         try:
+            print "inside state_update"
             data = cherrypy.request.json
             print type(data)
             username = data["username"]
@@ -156,14 +157,22 @@ class Root(object):
             #update_string = "savedGames."+ gamename + ".state"
             #db.users.update({"username": username },{ "$set" :{update_string:newstate}})
 
-            #sess = cherrypy.session
-            #ses_uname = sess.get(SESSION_KEY, None)
+            sess = cherrypy.session
+            ses_uname = sess.get(SESSION_KEY, None)
             # following works
             #return "after db update " + ses_uname
 
+
             # non login version
-            update_string = "savedGames."+ gamename + ".state"
-            db.users.update({"username": username },{ "$set" :{update_string:newstate}})
+            #update_string = "savedGames."+ gamename + ".state"
+            #db.users.update({"username": username },{ "$set" :{update_string:newstate}})
+
+            print ses_uname
+            """
+            if (username == ses_uname):
+                update_string = "savedGames."+ gamename + ".state"
+                db.users.update({"username": username },{ "$set" :{update_string:newstate}})
+            """
 
             """
             if ses_uname:
@@ -265,6 +274,47 @@ class Auth(object):
                 openid_user = json.loads(post_url.read())
                 cherrypy.session[SESSION_KEY] = cherrypy.request.login = openid_user['username']
                 return openid_user['username']
+
+
+            else:
+                print "create hittin"
+                # this is case of new user.
+                url = openid_url_signup
+                open_url = urllib2.urlopen(url)
+                html = open_url.read()
+                # getting csrf token from openid
+                doc = BeautifulSoup(html)
+                csrf_input = doc.find(attrs = dict(name = 'csrfmiddlewaretoken'))
+                csrf_token = csrf_input['value']
+                print "oken gotten"
+                params = urllib.urlencode(dict(username = d1['username'],
+                                               email =  d1['email'],
+                                               password1 = d1['password1'],
+                                               password2 = d1['password2'],
+                                               csrfmiddlewaretoken = csrf_token))
+
+                print params
+                print "just before crazy blocking call"
+                # This is a blocking call for some crazy unknown reason.  TODO FIX
+
+                post_url = urllib2.urlopen(url, params)
+
+                print "just after"
+                # getting user from openid
+                openid_user = json.loads(post_url.read())
+                # here check if openid returns a user, if so make user coresponding here in the sg db
+                if "username" in openid_user:
+                    print openid_user['username']
+                    # enter user coresponding here in the sg db.
+                    db.users.insert(openid_user)
+                    #establish the session.
+                    cherrypy.session[SESSION_KEY] = cherrypy.request.login = openid_user['username']
+                    return {}
+
+                else:
+                    print "openid user not hittin"
+                    #raise cherrypy.HTTPError(status=406, message=openid_user.get('err', {}))
+                    raise cherrypy.HTTPError(406)
 
         except Exception as e:
             return str(e)
