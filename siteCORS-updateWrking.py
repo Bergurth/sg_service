@@ -236,6 +236,9 @@ class Auth(object):
         cherrypy.response.headers["Access-Control-Allow-Credentials"] = "*"
         cj = cookielib.CookieJar()
 
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+        urllib2.install_opener(opener)
+
         print "just bfr getting json"
         # getting json
         """
@@ -244,7 +247,28 @@ class Auth(object):
         # making a dictionaty out of raw json string. TODO make try catch, for when bad json comes
         d1 = dict(ast.literal_eval(rawbody))
         """
+        try:
+            d1 = cherrypy.request.json
+            if (not (d1.get('email') and d1.get('password1') and d1.get('password2') and d1.get('username'))):
+                url = openid_url_signin
+                open_url = urllib2.urlopen(url)
+                html = open_url.read()
 
+
+
+                doc = BeautifulSoup(html)
+                csrf_input = doc.find(attrs = dict(name = 'csrfmiddlewaretoken'))
+                csrf_token = csrf_input['value']
+                params = urllib.urlencode(dict(username=d1['username'], password=d1['password'],csrfmiddlewaretoken=csrf_token))
+                post_url = urllib2.urlopen(url, params)
+                openid_user = json.loads(post_url.read())
+                cherrypy.session[SESSION_KEY] = cherrypy.request.login = openid_user['username']
+                return openid_user['username']
+
+        except Exception as e:
+            return str(e)
+
+        """  bjorn
         try:
             d1 = cherrypy.request.json
             if (not (d1.get('email') and d1.get('password1') and d1.get('password2') and d1.get('username'))):
@@ -262,6 +286,7 @@ class Auth(object):
         except Exception as e:
             return str(e)
 
+        """
         print url, params
         # This is a blocking call for some crazy unknown reason.  TODO FIX
         try:
