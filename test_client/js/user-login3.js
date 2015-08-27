@@ -3,11 +3,21 @@
      $("#login-button").click(_.bind(__onLoginLinkClicked));
      $('.signup-ctrls').hide();
      $('.password-reset-ctrls').hide();
+     $('.update-ctrls').hide();
 
      $("#signup-link").click(_.bind(__onSignupLinkClicked));
+     $("#update-link").click(_.bind(__onUpdateLinkClicked));
+
 
      $signupBtn = $("#signup-submit");
      $signinBtn = $("#signin-submit");
+     $updateBtn = $("#update-submit");
+
+     var url1      = window.location.href;
+     //location = window.location.href;
+     var source_url = "http://localhost:12315/auth/logout?from_page="+url1;
+     $('#logout_link').attr("href", source_url);
+
 
      $(".auth-form").submit(_.bind(this.__onFormSubmitted, this));
      $(".btn-login").click(_.bind(__onLoginButtonClicked));
@@ -26,7 +36,10 @@
           if ($signinBtn.is(':visible'))
               submitAsSignIn($source);
           else if ($signupBtn.is(':visible'))
-              this.submitAsSignUp($source);
+              submitAsSignUp($source);
+          else if ($updateBtn.is(':visible'))
+              submitAsUpdate($source);
+
           else {
               $('#password-reset-loader').show();
               submitAsReset($source);
@@ -36,9 +49,18 @@
       function __onSignupLinkClicked(event) {
           event.preventDefault();
 
-          $('.signin-ctrls, .password-reset-ctrls').hide();
+          $('.signin-ctrls, .password-reset-ctrls .update-ctrls').hide();
           $('.signup-ctrls').fadeIn()
               .find('[name=email]').focus();
+      }
+
+      function __onUpdateLinkClicked(event) {
+            event.preventDefault();
+
+            $('.signin-ctrls, .password-reset-ctrls .signup-ctrls').hide();
+            $('.update-ctrls').fadeIn()
+              .find('[name=username]').focus();
+
       }
 
       function __onLoginButtonClicked(event) {
@@ -73,6 +95,37 @@
             // origin : chrome-extention://mkhojklkhkdaghjjfdnphfphiaiohkef
         });
     }
+
+     function submitAsUpdate($form) {
+        console.log("inside submit as update");
+        //var $form = $(event.currentTarget);
+
+
+
+        jsn = JSON.stringify({
+          'username' : $form.find("div.update-ctrls [name=username]").val(),
+          'gamename': $form.find("div.update-ctrls [name=gamename]").val(),
+          'newstate': $form.find("div.update-ctrls [name=newstate]").val()
+        });
+
+        $.ajax({
+            url: 'http://localhost:12315/state_update',
+            type: 'POST',
+            contentType: 'application/json',
+            data: jsn,
+            //headers:{"Origin" : "chrome-extention://mkhojklkhkdaghjjfdnphfphiaiohkef"},
+            success: function(data){
+                console.log(data);
+                console.log("device control succeeded");
+            },
+            error: function(){
+            //console.log(data);
+                console.log("Device control failed");
+            },
+        //processData: false,
+        // origin : chrome-extention://mkhojklkhkdaghjjfdnphfphiaiohkef
+        });
+      }
 
       function submitAsReset($form) {
         jsn = JSON.stringify({'email': $form.find('div.password-reset-ctrls [name=email]').val()});

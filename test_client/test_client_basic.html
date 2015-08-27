@@ -57,7 +57,7 @@
                 <ul class="navbar-right dropdown-menu">
 
                     <li class="divider"></li>
-                    <li><a href="http://localhost:12315/auth/logout" class="btn-logout">Logout</a></li>
+                    <li><a id="logout_link" href="http://localhost:12315/auth/logout" class="btn-logout">Logout</a></li>
                 </ul>
             </div>
 
@@ -106,6 +106,32 @@
             <h3>Login</h3>
         </div>
           <div class="modal-body">
+            <div class="update-ctrls">
+                  <div class="server-message">
+                      <p><strong></strong></p>
+                  </div>
+
+                  <div class="form-group">
+                      <label class="control-label">Username</label>
+                      <div class="controls">
+                          <input name="username" type="text"/>
+                      </div>
+                  </div>
+
+                  <div class="form-group">
+                      <label class="control-label">gamename</label>
+                      <div class="controls">
+                          <input name="gamename" type="text"/>
+                      </div>
+                  </div>
+
+                  <div class="form-group">
+                      <label class="control-label">newstate</label>
+                      <div class="controls">
+                          <input name="newstate" type="text"/>
+                      </div>
+                  </div>
+              </div>
               <div class="signin-ctrls">
                   <div class="server-message">
                       <p><strong></strong></p>
@@ -187,8 +213,18 @@
               <a id="signup-link" class="signin-ctrls" href="javascript:;">
                   Sign up as new user
               </a>
+                    &nbsp; | &nbsp;
+              <a id="update-link" class="signin-ctrls" href="javascript:;">
+                  Update a User Game
+              </a>
+
+
               <input id="signin-submit" class="btn btn-success signin-ctrls" type="submit"
                      value="Login"/>
+
+
+              <input id="update-submit" class="btn btn-success update-ctrls" type="submit"
+                     value="Update"/>
 
               <a id="signin-link" class="signup-ctrls" href="javascript:;">
                   Login as registered user
@@ -199,8 +235,11 @@
               <a id="cancel-reset-link" class="password-reset-ctrls" href="javascript:;">
                   Login as registered user
               </a>
+
+
               <input id="password-reset-submit" class="btn btn-success password-reset-ctrls" type="submit"
                      value="Reset Password"/>
+
           </div>
       </div>
     </form>

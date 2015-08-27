@@ -247,6 +247,7 @@ class Auth(object):
         # making a dictionaty out of raw json string. TODO make try catch, for when bad json comes
         d1 = dict(ast.literal_eval(rawbody))
         """
+        # this seems to acomplish login, but only for the tab/site in question.
         try:
             d1 = cherrypy.request.json
             if (not (d1.get('email') and d1.get('password1') and d1.get('password2') and d1.get('username'))):
@@ -382,7 +383,7 @@ class Auth(object):
 
     @cherrypy.expose
     @cherrypy.tools.allow(methods=['GET'])
-    def logout(self, from_page="/"):
+    def logout(self, from_page=None):
         sess = cherrypy.session
         username = sess.get(SESSION_KEY, None)
         sess[SESSION_KEY] = None
@@ -391,8 +392,8 @@ class Auth(object):
             #self.on_logout(username)
             print cherrypy.session[SESSION_KEY]
             print cherrypy.request.login
-        #raise cherrypy.HTTPRedirect(from_page or "/static")
-        raise cherrypy.HTTPRedirect("/static")
+        raise cherrypy.HTTPRedirect(from_page or "/static")
+        #raise cherrypy.HTTPRedirect("")
 
 
 class Protected(object):
