@@ -9,6 +9,7 @@ import re
 import urllib
 import urllib2
 import cookielib
+import requests
 from BeautifulSoup import BeautifulSoup
 
 
@@ -155,10 +156,16 @@ class Root(object):
             #update_string = "savedGames."+ gamename + ".state"
             #db.users.update({"username": username },{ "$set" :{update_string:newstate}})
 
-            sess = cherrypy.session
-            ses_uname = sess.get(SESSION_KEY, None)
+            #sess = cherrypy.session
+            #ses_uname = sess.get(SESSION_KEY, None)
             # following works
             #return "after db update " + ses_uname
+
+            # non login version
+            update_string = "savedGames."+ gamename + ".state"
+            db.users.update({"username": username },{ "$set" :{update_string:newstate}})
+
+            """
             if ses_uname:
                 if (username == ses_uname):
                     if gamename:
@@ -173,6 +180,8 @@ class Root(object):
                     raise cherrypy.HTTPError(401)
             else:
                 raise cherrypy.HTTPError(401)
+
+            """
             """
             try:
                 sess = cherrypy.session
@@ -217,49 +226,55 @@ class Auth(object):
     @cherrypy.expose
     #@cherrypy.tools.allow(methods=['POST'])
     #@cherrypy.tools.json_out()
-    #@cherrypy.tools.json_in()
-    def login(self, username=None, password=None , password1=None, password2=None, email=None):
+    @cherrypy.tools.json_in()
+    def login(self):
+        # login(self, username=None, password=None , password1=None, password2=None, email=None):
+        # longin(self):    for with json_in
         # login in a user. Creating a session key with username.
         print "login started"
         cherrypy.response.headers["Access-Control-Allow-Origin"] = "*"
         cherrypy.response.headers["Access-Control-Allow-Credentials"] = "*"
         cj = cookielib.CookieJar()
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-        urllib2.install_opener(opener)
 
         print "just bfr getting json"
         # getting json
+        """
         cl = cherrypy.request.headers['Content-Length']
         rawbody = cherrypy.request.body.read(int(cl))
         # making a dictionaty out of raw json string. TODO make try catch, for when bad json comes
         d1 = dict(ast.literal_eval(rawbody))
-        print "after dict made"
-        print d1['username']
-        if (not (d1.get('email') and d1.get('password1') and d1.get('password2') and d1.get('username'))):
-            # this is case of regular login.
-            url = openid_url_signin
-            open_url = urllib2.urlopen(url)
-            html = open_url.read()
-            # getting csrf token from openid
-            doc = BeautifulSoup(html)
-            csrf_input = doc.find(attrs = dict(name = 'csrfmiddlewaretoken'))
-            csrf_token = csrf_input['value']
-            params = urllib.urlencode(dict(username=d1['username'], password=d1['password'],csrfmiddlewaretoken=csrf_token))
+        """
 
-            print url
-            print params
-            # This is a blocking call for some crazy unknown reason.  TODO FIX
-            try:
-                post_url = urllib2.urlopen(url, params)
-            except:
-                pass
-            # getting user from openid
-            openid_user = json.loads(post_url.read())
-            # here the sessin is being established
-            cherrypy.session[SESSION_KEY] = cherrypy.request.login = openid_user['username']
-            # TODO some error handling here.
-            return {}
+        try:
+            d1 = cherrypy.request.json
+            if (not (d1.get('email') and d1.get('password1') and d1.get('password2') and d1.get('username'))):
+                s = requests.Session()
+                response = s.get(openid_url_signin)
+                print s.cookies
+                soup = BeautifulSoup(response.text)
+                csrf_token = soup.find("input", {"name":"csrfmiddlewaretoken"})['value']
+                params = urllib.urlencode(dict(username=d1['username'], password=d1['password'],csrfmiddlewaretoken=csrf_token))
+                print openid_url_signin+'?'+params
+                cookie = {'csrfmiddlewaretoken': csrf_token}
+                open_id_response = s.post(openid_url_signin+'?'+params, cookies=cookie)
+                return open_id_response.text
+            return "failed"
+        except Exception as e:
+            return str(e)
 
+        print url, params
+        # This is a blocking call for some crazy unknown reason.  TODO FIX
+        try:
+            post_url = urllib2.urlopen(url, params)
+        except:
+            pass
+        # getting user from openid
+        openid_user = json.loads(post_url.read())
+        # here the sessin is being established
+        cherrypy.session[SESSION_KEY] = cherrypy.request.login = openid_user['username']
+        # TODO some error handling here.
+        return {}
+        """
         else:
             print "create hittin"
             # this is case of new user.
@@ -300,7 +315,7 @@ class Auth(object):
                 print "openid user not hittin"
                 #raise cherrypy.HTTPError(status=406, message=openid_user.get('err', {}))
                 raise cherrypy.HTTPError(406)
-
+        """
     @cherrypy.expose
     @cherrypy.tools.allow(methods=['POST'])
     def openid_reset(self, email=None):
@@ -383,12 +398,16 @@ class Static(object):pass
 class Supdate(object):pass
 
 
+
+
 # session timeout should probably be longer.
 config = {
     'global':{
         'server.socket_host': '127.0.0.1',
         'server.socket_port': 12315,
         'tools.CORS.on': True,
+        # cherrypy_cors
+        #'cors.expose.on': True,
     },
     '/':{
         #'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
@@ -398,6 +417,8 @@ config = {
         'tools.sessions.persistent': True,
         'tools.sessions.timeout': 60,
         'tools.CORS.on': True,
+        # cherrypy_cors
+        #'cors.expose.on': True,
 
         #'tools.response_headers.on': True,
         #'tools.response_headers.headers': [('Content-Type', 'text/plain')],

@@ -48,30 +48,31 @@
           this.$el.modal();
       }
 
-      function submitAsSignUp($form) {
-          jsn = JSON.stringify({
-              'email'    : $form.find("div.signup-ctrls [name=email]").val(),
-              'username' : $form.find("div.signup-ctrls [name=username]").val(),
-              'password1': $form.find("div.signup-ctrls [name=password1]").val(),
-              'password2': $form.find("div.signup-ctrls [name=password2]").val()
-          });
-          $.ajax({
-          type: 'POST',
-          contentType: 'application/json',
-          data: jsn,
-          dataType: 'json',
-          //headers:{"Origin" : "chrome-extention://mkhojklkhkdaghjjfdnphfphiaiohkef"},
-          success: function(data){
-          console.log("device control succeeded");
-          },
-        error: function(){
-        console.log("Device control failed");
-        },
-        //processData: false,
-        // origin : chrome-extention://mkhojklkhkdaghjjfdnphfphiaiohkef
-        url: 'http://localhost:12315/auth/login'
+    function submitAsSignUp($form) {
+        jsn = JSON.stringify({
+            'email'    : $form.find("div.signup-ctrls [name=email]").val(),
+            'username' : $form.find("div.signup-ctrls [name=username]").val(),
+            'password1': $form.find("div.signup-ctrls [name=password1]").val(),
+            'password2': $form.find("div.signup-ctrls [name=password2]").val()
         });
-      }
+
+        $.ajax({
+            url: 'http://localhost:12315/auth/login',
+            type: 'POST',
+            contentType: 'application/json',
+            data: jsn,
+            dataType: 'json',
+            //headers:{"Origin" : "chrome-extention://mkhojklkhkdaghjjfdnphfphiaiohkef"},
+            success: function(data){
+                console.log("device control succeeded");
+            },
+            error: function(){
+                console.log("Device control failed");
+            },
+            //processData: false,
+            // origin : chrome-extention://mkhojklkhkdaghjjfdnphfphiaiohkef
+        });
+    }
 
       function submitAsReset($form) {
         jsn = JSON.stringify({'email': $form.find('div.password-reset-ctrls [name=email]').val()});
