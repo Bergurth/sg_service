@@ -156,9 +156,13 @@ class Root(object):
             # next two lines test, working thing..
             #update_string = "savedGames."+ gamename + ".state"
             #db.users.update({"username": username },{ "$set" :{update_string:newstate}})
-
-            sess = cherrypy.session
-            ses_uname = sess.get(SESSION_KEY, None)
+            try:
+                sess = cherrypy.session
+                ses_uname = sess.get(SESSION_KEY, None)
+                return username + " server secret"
+            except Exception as fart:
+                print str(fart)
+                return "failed"
             # following works
             #return "after db update " + ses_uname
 
@@ -168,11 +172,11 @@ class Root(object):
             #db.users.update({"username": username },{ "$set" :{update_string:newstate}})
 
             print ses_uname
-            """
+
             if (username == ses_uname):
                 update_string = "savedGames."+ gamename + ".state"
                 db.users.update({"username": username },{ "$set" :{update_string:newstate}})
-            """
+
 
             """
             if ses_uname:
@@ -272,8 +276,12 @@ class Auth(object):
                 params = urllib.urlencode(dict(username=d1['username'], password=d1['password'],csrfmiddlewaretoken=csrf_token))
                 post_url = urllib2.urlopen(url, params)
                 openid_user = json.loads(post_url.read())
-                cherrypy.session[SESSION_KEY] = cherrypy.request.login = openid_user['username']
-                return openid_user['username']
+                #cherrypy.session[SESSION_KEY] = cherrypy.request.login = openid_user['username']
+                try:
+                    cherrypy.session[SESSION_KEY] = openid_user['username']
+                    return openid_user['username'], cherrypy.session[SESSION_KEY]
+                except Exception as fart:
+                    return str(fart)
 
 
             else:
@@ -308,7 +316,7 @@ class Auth(object):
                     # enter user coresponding here in the sg db.
                     db.users.insert(openid_user)
                     #establish the session.
-                    cherrypy.session[SESSION_KEY] = cherrypy.request.login = openid_user['username']
+                    #cherrypy.session[SESSION_KEY] = cherrypy.request.login = openid_user['username']
                     return {}
 
                 else:
