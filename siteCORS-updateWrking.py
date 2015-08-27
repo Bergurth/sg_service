@@ -410,37 +410,12 @@ config = {
 }
 
 
-configAuth = {
-    'global':{
-        'server.socket_host': '127.0.0.1',
-        'server.socket_port': 12315,
-
-    },
-    '/':{
-        #'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-        'environment': 'production',
-        'log.screen': False,
-        'tools.sessions.on': True,
-        'tools.sessions.persistent': True,
-        'tools.sessions.timeout': 60,
-
-
-        #'tools.response_headers.on': True,
-        #'tools.response_headers.headers': [('Content-Type', 'text/plain')],
-
-        #'tools.staticdir.on': True,
-        #'cors.expose.on' : True,
-
-        #'tools.response_headers.on': True,
-    },
-}
-
 
 
 cherrypy.config.update(config)
 
 cherrypy.tree.mount(Root(), '/', config=config)
-cherrypy.tree.mount(Auth(), '/auth', config=configAuth)
+cherrypy.tree.mount(Auth(), '/auth', config=config)
 #cherrypy.tree.mount(Protected(), '/protected', config=config)
 
 cherrypy.tree.mount(Static(), '/static',config={'/': {
