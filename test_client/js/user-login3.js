@@ -112,6 +112,9 @@
             url: 'http://localhost:12315/state_update',
             type: 'POST',
             contentType: 'application/json',
+            xhrFields: {
+                withCredentials: true
+            },
             data: jsn,
             //headers:{"Origin" : "chrome-extention://mkhojklkhkdaghjjfdnphfphiaiohkef"},
             success: function(data){
@@ -124,6 +127,12 @@
             },
         //processData: false,
         // origin : chrome-extention://mkhojklkhkdaghjjfdnphfphiaiohkef
+        /*
+         xhrFields: {
+                withCredentials: true
+            },
+            crossDomain: true
+        */
         });
       }
 
@@ -166,6 +175,9 @@
             url: 'http://localhost:12315/auth/login',
             type: 'POST',
             contentType: 'application/json',
+            xhrFields: {
+                withCredentials: true
+            },
             data: data,
             //headers:{"Origin" : "chrome-extention://mkhojklkhkdaghjjfdnphfphiaiohkef"},
             success: function(data){
@@ -175,6 +187,13 @@
             error: function(){
                 console.log("Device control failed");
             },
+
+            /*
+            xhrFields: {
+                withCredentials: true
+            },
+            crossDomain: true
+            */
         //processData: false,
         // origin : chrome-extention://mkhojklkhkdaghjjfdnphfphiaiohkef
         });

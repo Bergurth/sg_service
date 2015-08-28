@@ -104,10 +104,12 @@ class Root(object):
     #@cherrypy.tools.allow(methods=['POST'])
     @cherrypy.tools.json_in()
     def state_update(self):
-        # implements ow login required ..
 
-        cherrypy.response.headers["Access-Control-Allow-Origin"] = "*"
-        cherrypy.response.headers["Access-Control-Allow-Credentials"] = "*"
+
+
+
+        cherrypy.response.headers["Access-Control-Allow-Origin"] = "http://localhost:12314"
+        cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
         """   -- try to get session test
         try:
             sess = cherrypy.session
@@ -247,9 +249,26 @@ class Auth(object):
         # login(self, username=None, password=None , password1=None, password2=None, email=None):
         # longin(self):    for with json_in
         # login in a user. Creating a session key with username.
+        if (cherrypy.request.method == 'OPTIONS'):
+            print "options maaaan"
+
+            c1 = cherrypy.request.cookie
+            for name in c1.keys():
+                print "name: %s , value: %s " % (name, str(c1[name]))
+
+
+            cherrypy.response.headers["Access-Control-Allow-Origin"] = "http://localhost:12314"
+            cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
+            cherrypy.response.headers['Connection'] = 'keep-alive'
+            cherrypy.response.headers['Access-Control-Max-Age'] = '1440'
+            cherrypy.response.headers['Access-Control-Allow-Headers'] = 'X-Auth-Token,Content-Type,Accept,csrftoken,sessionid,_ga,session_id'
+            return {}
+
+
+
         print "login started"
-        cherrypy.response.headers["Access-Control-Allow-Origin"] = "*"
-        cherrypy.response.headers["Access-Control-Allow-Credentials"] = "*"
+        cherrypy.response.headers["Access-Control-Allow-Origin"] = "http://localhost:12314"
+        cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
         cj = cookielib.CookieJar()
 
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
@@ -468,8 +487,9 @@ import cherrypy_cors
 cherrypy_cors.install()
 """
 def CORS():
-    cherrypy.response.headers["Access-Control-Allow-Origin"] = "*"
+    cherrypy.response.headers["Access-Control-Allow-Origin"] = "http://localhost:12314"
     cherrypy.response.headers["Access-Control-Allow-Headers"] = "Origin, X-Requested-With, Content-Type, Accept"
+    cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
 
 cherrypy.tools.CORS = cherrypy.Tool('before_finalize', CORS)
 
