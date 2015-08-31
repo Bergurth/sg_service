@@ -50,23 +50,9 @@ def login_required(f):
     return _login_required
 
 
-def login_required_json(f):
-    # a decorator factory providing a logged in check.
-    def _login_required():
-        sess = cherrypy.session
-        username = sess.get(SESSION_KEY, None)
-        if (username != None):
-            print "unae hittin"
-            return f()
-        else:
-            return "not logged in.   maaan!"
-
-    return _login_required
-
-
-
 class Root(object):
     @cherrypy.expose
+    # TODO remove this in production.
     #@cherrypy.tools.json_out()
     def index(self):
             users = []
@@ -77,15 +63,10 @@ class Root(object):
             return dumps(users)
             #return "hello this is no default site"
 
-    @cherrypy.expose
-    def hallo(self):
-        return "hallo"
-
-
     #http://localhost:12315/user/?username=fred
     @cherrypy.expose
     @login_required
-    #@cherrypy.tools.allow(methods=['GET'])
+    @cherrypy.tools.allow(methods=['GET'])
     # TODO add case for state of particular game.
     def user(self, username=None):
         sess = cherrypy.session
@@ -99,58 +80,13 @@ class Root(object):
 
 
     @cherrypy.expose
-    #@login_required
-    #@login_required_json
-    #@cherrypy.tools.allow(methods=['POST'])
+    # implements own login check.
+    @cherrypy.tools.allow(methods=['POST','OPTIONS'])
     @cherrypy.tools.json_in()
     def state_update(self):
-
-
-
-
         cherrypy.response.headers["Access-Control-Allow-Origin"] = "http://localhost:12314"
         cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
-        """   -- try to get session test
-        try:
-            sess = cherrypy.session
-            ses_uname = sess.get(SESSION_KEY, None)
-            return ses_uname
-        except Exception as e:
-            print str(e)
-            return "failed"
-        """
 
-        """
-        try:
-            sess = cherrypy.session
-            username = sess.get(SESSION_KEY, None)
-        except Exception as e:
-            return "no json"
-
-        sess = cherrypy.session
-        ses_uname = sess.get(SESSION_KEY, None)
-        # getting json
-
-        cl = cherrypy.request.headers['Content-Length']
-        rawbody = cherrypy.request.body.read(int(cl))
-        # making a dictionaty out of raw json string. TODO make try catch, for when bad json comes
-        d1 = dict(ast.literal_eval(rawbody))
-        if (d1.get('username') == ses_uname):
-            #carry on
-            if (d1.get('gamename')!=None):
-                #update state of game in db.
-                update_string = "savedGames."+ d1.get('gamename') + ".state"
-                # todo check that newstate closes all parentasis maybe .. maybe with regex.. or do some input cleaning ..
-                # this is maybe an issue of design, could also be a check if newstate is valid json,
-                # if we decide that state should always be a json string. try if json.loads(d1.get('newstate')) gives error.
-                db.users.update({"username": d1.get('username') },{ "$set" :{update_string:d1.get('newstate')}})
-            else:
-                #bad input
-                raise cherrypy.HTTPError(401)
-        else:
-            #not authorized.
-            raise cherrypy.HTTPError(401)
-        """
         try:
             print "inside state_update"
             data = cherrypy.request.json
@@ -158,105 +94,47 @@ class Root(object):
             username = data["username"]
             newstate = data["newstate"]
             gamename = data["gamename"]
-            # next two lines test, working thing..
-            #update_string = "savedGames."+ gamename + ".state"
-            #db.users.update({"username": username },{ "$set" :{update_string:newstate}})
+
             try:
                 sess = cherrypy.session
                 ses_uname = sess.get(SESSION_KEY, None)
                 #return ses_uname + " server secret"
-            except Exception as fart:
-                print str(fart)
+            except Exception as err:
+                print str(err)
                 return "failed"
-            # following works
-            #return "after db update " + ses_uname
 
-
-            # non login version
-            #update_string = "savedGames."+ gamename + ".state"
-            #db.users.update({"username": username },{ "$set" :{update_string:newstate}})
-
-            print ses_uname
 
             if (username == ses_uname):
-                update_string = "savedGames."+ gamename + ".state"
-                db.users.update({"username": username },{ "$set" :{update_string:newstate}})
-
-
-            """
-            if ses_uname:
-                if (username == ses_uname):
-                    if gamename:
-                        update_string = "savedGames."+ gamename + ".state"
-                        db.users.update({"username": username },{ "$set" :{update_string:newstate}})
-                        return "after db update " + ses_uname + " " + gamename
-                    else:
-                        #bad input
-                        raise cherrypy.HTTPError(401)
-                else:
-                    #not authorized.
-                    raise cherrypy.HTTPError(401)
-            else:
-                raise cherrypy.HTTPError(401)
-
-            """
-            """
-            try:
-                sess = cherrypy.session
-                ses_uname = sess.get(SESSION_KEY, None)
-            except Exception as e1:
-                print str(e1)
-                return "getting session failed"
-            """
-
-            """ adapted should work part
-            if (username == ses_uname):
-                print "first if passes"
-                if (gamename!=None):
-                    print "second if .."
+                if gamename:
                     update_string = "savedGames."+ gamename + ".state"
                     # todo check that newstate closes all parentasis maybe .. maybe with regex.. or do some input cleaning ..
                     # this is maybe an issue of design, could also be a check if newstate is valid json,
                     # if we decide that state should always be a json string. try if json.loads(d1.get('newstate')) gives error.
-
                     db.users.update({"username": username },{ "$set" :{update_string:newstate}})
-                    return "success"
                 else:
-                    #bad input
-                    raise cherrypy.HTTPError(401)
+                        #bad input
+                        raise cherrypy.HTTPError(406)
             else:
-                #not authorized.
-                raise cherrypy.HTTPError(401)
-            """
+                    #not authorized.
+                    raise cherrypy.HTTPError(401)
+
         except Exception as e:
             print str(e)
             return "failed"
 
-        """
-    @cherrypy.expose
-    @login_required
-    @cherrypy.tools.allow(methods=['POST'])
-    def user2(self, username=None):
-        return dumps(username)
-        """
 
 class Auth(object):
     @cherrypy.expose
-    #@cherrypy.tools.allow(methods=['POST'])
-    #@cherrypy.tools.json_out()
+    @cherrypy.tools.allow(methods=['POST','OPTIONS'])
     @cherrypy.tools.json_in()
     def login(self):
-        # login(self, username=None, password=None , password1=None, password2=None, email=None):
-        # longin(self):    for with json_in
         # login in a user. Creating a session key with username.
         if (cherrypy.request.method == 'OPTIONS'):
-            print "options maaaan"
-
+            """  --  shows cookie
             c1 = cherrypy.request.cookie
             for name in c1.keys():
                 print "name: %s , value: %s " % (name, str(c1[name]))
-
-
+            """
             cherrypy.response.headers["Access-Control-Allow-Origin"] = "http://localhost:12314"
             cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
             cherrypy.response.headers['Connection'] = 'keep-alive'
@@ -264,9 +142,6 @@ class Auth(object):
             cherrypy.response.headers['Access-Control-Allow-Headers'] = 'X-Auth-Token,Content-Type,Accept,csrftoken,sessionid,_ga,session_id'
             return {}
 
-
-
-        print "login started"
         cherrypy.response.headers["Access-Control-Allow-Origin"] = "http://localhost:12314"
         cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
         cj = cookielib.CookieJar()
@@ -274,9 +149,8 @@ class Auth(object):
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
         urllib2.install_opener(opener)
 
-        print "just bfr getting json"
         # getting json
-        """
+        """   ---  former method, before cp.json_in
         cl = cherrypy.request.headers['Content-Length']
         rawbody = cherrypy.request.body.read(int(cl))
         # making a dictionaty out of raw json string. TODO make try catch, for when bad json comes
@@ -301,13 +175,13 @@ class Auth(object):
                 #cherrypy.session[SESSION_KEY] = cherrypy.request.login = openid_user['username']
                 try:
                     cherrypy.session[SESSION_KEY] = openid_user['username']
+                    # following line is for debuging purposes, could return somthing else ..like {}
                     return openid_user['username'], cherrypy.session[SESSION_KEY]
                 except Exception as fart:
                     return str(fart)
 
 
             else:
-                print "create hittin"
                 # this is case of new user.
                 url = openid_url_signup
                 open_url = urllib2.urlopen(url)
@@ -316,112 +190,30 @@ class Auth(object):
                 doc = BeautifulSoup(html)
                 csrf_input = doc.find(attrs = dict(name = 'csrfmiddlewaretoken'))
                 csrf_token = csrf_input['value']
-                print "oken gotten"
                 params = urllib.urlencode(dict(username = d1['username'],
                                                email =  d1['email'],
                                                password1 = d1['password1'],
                                                password2 = d1['password2'],
                                                csrfmiddlewaretoken = csrf_token))
 
-                print params
-                print "just before crazy blocking call"
                 # This is a blocking call for some crazy unknown reason.  TODO FIX
-
                 post_url = urllib2.urlopen(url, params)
-
-                print "just after"
                 # getting user from openid
                 openid_user = json.loads(post_url.read())
                 # here check if openid returns a user, if so make user coresponding here in the sg db
                 if "username" in openid_user:
-                    print openid_user['username']
                     # enter user coresponding here in the sg db.
                     db.users.insert(openid_user)
                     #establish the session.
-                    #cherrypy.session[SESSION_KEY] = cherrypy.request.login = openid_user['username']
+                    cherrypy.session[SESSION_KEY] = cherrypy.request.login = openid_user['username']
                     return {}
-
                 else:
-                    print "openid user not hittin"
-                    #raise cherrypy.HTTPError(status=406, message=openid_user.get('err', {}))
-                    raise cherrypy.HTTPError(406)
+                    raise cherrypy.HTTPError(status=406, message=openid_user.get('err', {}))
 
         except Exception as e:
             return str(e)
 
-        """  bjorn
-        try:
-            d1 = cherrypy.request.json
-            if (not (d1.get('email') and d1.get('password1') and d1.get('password2') and d1.get('username'))):
-                s = requests.Session()
-                response = s.get(openid_url_signin)
-                print s.cookies
-                soup = BeautifulSoup(response.text)
-                csrf_token = soup.find("input", {"name":"csrfmiddlewaretoken"})['value']
-                params = urllib.urlencode(dict(username=d1['username'], password=d1['password'],csrfmiddlewaretoken=csrf_token))
-                print openid_url_signin+'?'+params
-                cookie = {'csrfmiddlewaretoken': csrf_token}
-                open_id_response = s.post(openid_url_signin+'?'+params, cookies=cookie)
-                return open_id_response.text
-            return "failed"
-        except Exception as e:
-            return str(e)
 
-        """
-        print url, params
-        # This is a blocking call for some crazy unknown reason.  TODO FIX
-        try:
-            post_url = urllib2.urlopen(url, params)
-        except:
-            pass
-        # getting user from openid
-        openid_user = json.loads(post_url.read())
-        # here the sessin is being established
-        cherrypy.session[SESSION_KEY] = cherrypy.request.login = openid_user['username']
-        # TODO some error handling here.
-        return {}
-        """
-        else:
-            print "create hittin"
-            # this is case of new user.
-            url = openid_url_signup
-            open_url = urllib2.urlopen(url)
-            html = open_url.read()
-            # getting csrf token from openid
-            doc = BeautifulSoup(html)
-            csrf_input = doc.find(attrs = dict(name = 'csrfmiddlewaretoken'))
-            csrf_token = csrf_input['value']
-            print "oken gotten"
-            params = urllib.urlencode(dict(username = d1['username'],
-                                           email =  d1['email'],
-                                           password1 = d1['password1'],
-                                           password2 = d1['password2'],
-                                           csrfmiddlewaretoken = csrf_token))
-
-            print params
-            print "just before crazy blocking call"
-            # This is a blocking call for some crazy unknown reason.  TODO FIX
-            try:
-                post_url = urllib2.urlopen(url, params)
-            except:
-                pass
-            print "just after"
-            # getting user from openid
-            openid_user = json.loads(post_url.read())
-            # here check if openid returns a user, if so make user coresponding here in the sg db
-            if "username" in openid_user:
-                print openid_user
-                # enter user coresponding here in the sg db.
-                db.users.insert(openid_user)
-                #establish the session.
-                cherrypy.session[SESSION_KEY] = cherrypy.request.login = openid_user['username']
-                return {}
-
-            else:
-                print "openid user not hittin"
-                #raise cherrypy.HTTPError(status=406, message=openid_user.get('err', {}))
-                raise cherrypy.HTTPError(406)
-        """
     @cherrypy.expose
     #@cherrypy.tools.allow(methods=['POST'])
     @cherrypy.tools.json_in()
@@ -442,22 +234,12 @@ class Auth(object):
             cherrypy.response.headers['Access-Control-Allow-Headers'] = 'X-Auth-Token,Content-Type,Accept,csrftoken,sessionid,_ga,session_id'
             return {}
 
-
-
-
-        # from menntg
         """
         Perform a reset password feature. Asks for an email address which will be
         submitted to the openid server
         """
         cherrypy.response.headers["Access-Control-Allow-Origin"] = "http://localhost:12314"
         cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
-        """
-        cj = cookielib.CookieJar()
-
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-        urllib2.install_opener(opener)
-        """
 
         url       = openid_request_reset
         urlopener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.CookieJar()))
@@ -470,14 +252,7 @@ class Auth(object):
         stream.close()
 
         token  = document.find(attrs={'name': 'csrfmiddlewaretoken'}).get('value')
-        #fields = parse_submit(request)
         # getting json
-        """
-        cl = cherrypy.request.headers['Content-Length']
-        rawbody = cherrypy.request.body.read(int(cl))
-        # making a dictionaty out of raw json string. TODO make try catch, for when bad json comes
-        d1 = dict(ast.literal_eval(rawbody))
-        """
         try:
             d1 = cherrypy.request.json
             params = urllib.urlencode({'email': d1.get('email'), 'csrfmiddlewaretoken': token})
@@ -510,7 +285,7 @@ class Auth(object):
             print cherrypy.session[SESSION_KEY]
             print cherrypy.request.login
         raise cherrypy.HTTPRedirect(from_page or "/static")
-        #raise cherrypy.HTTPRedirect("")
+
 
 
 class Protected(object):
@@ -525,13 +300,10 @@ cherrypy_cors.install()
 """
 def CORS():
     cherrypy.response.headers["Access-Control-Allow-Origin"] = "http://localhost:12314"
-    #cherrypy.response.headers["Access-Control-Allow-Headers"] = "Origin, X-Requested-With, Content-Type, Accept"
+    cherrypy.response.headers['Access-Control-Allow-Headers'] = 'X-Auth-Token,Content-Type,Accept,csrftoken,sessionid,_ga,session_id,Origin, X-Requested-With, Content-Type, Accept'
     cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
-
-
     cherrypy.response.headers['Connection'] = 'keep-alive'
     cherrypy.response.headers['Access-Control-Max-Age'] = '1440'
-    cherrypy.response.headers['Access-Control-Allow-Headers'] = 'X-Auth-Token,Content-Type,Accept,csrftoken,sessionid,_ga,session_id,Origin, X-Requested-With, Content-Type, Accept'
 
 cherrypy.tools.CORS = cherrypy.Tool('before_finalize', CORS)
 
@@ -555,8 +327,6 @@ config = {
         'server.socket_host': '127.0.0.1',
         'server.socket_port': 12315,
         'tools.CORS.on': True,
-        # cherrypy_cors
-        #'cors.expose.on': True,
     },
     '/':{
         #'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
@@ -587,8 +357,8 @@ cherrypy.config.update(config)
 
 cherrypy.tree.mount(Root(), '/', config=config)
 cherrypy.tree.mount(Auth(), '/auth', config=config)
-#cherrypy.tree.mount(Protected(), '/protected', config=config)
 
+# local client
 cherrypy.tree.mount(Static(), '/static',config={'/': {
                 'tools.staticdir.on': True,
                 'tools.staticdir.dir': stat_path,
@@ -605,4 +375,3 @@ cherrypy.tree.mount(Supdate(), '/supdate',config={'/': {
 cherrypy.engine.start()
 cherrypy.engine.block()
 
-#cherrypy.quickstart(Root())
