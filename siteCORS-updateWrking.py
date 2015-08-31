@@ -423,18 +423,47 @@ class Auth(object):
                 raise cherrypy.HTTPError(406)
         """
     @cherrypy.expose
-    @cherrypy.tools.allow(methods=['POST'])
+    #@cherrypy.tools.allow(methods=['POST'])
+    @cherrypy.tools.json_in()
     def openid_reset(self, email=None):
         # TODO perform reset password.
+        if (cherrypy.request.method == 'OPTIONS'):
+            print "options maaaan"
+
+            c1 = cherrypy.request.cookie
+            for name in c1.keys():
+                print "name: %s , value: %s " % (name, str(c1[name]))
+
+
+            cherrypy.response.headers["Access-Control-Allow-Origin"] = "http://localhost:12314"
+            cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
+            cherrypy.response.headers['Connection'] = 'keep-alive'
+            cherrypy.response.headers['Access-Control-Max-Age'] = '1440'
+            cherrypy.response.headers['Access-Control-Allow-Headers'] = 'X-Auth-Token,Content-Type,Accept,csrftoken,sessionid,_ga,session_id'
+            return {}
+
+
+
 
         # from menntg
         """
         Perform a reset password feature. Asks for an email address which will be
         submitted to the openid server
         """
+        cherrypy.response.headers["Access-Control-Allow-Origin"] = "http://localhost:12314"
+        cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
+        """
+        cj = cookielib.CookieJar()
+
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+        urllib2.install_opener(opener)
+        """
+
         url       = openid_request_reset
         urlopener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.CookieJar()))
         urllib2.install_opener(urlopener)
+        print "after urllib2 thing"
+
 
         stream   = urllib2.urlopen(url)
         document = BeautifulSoup(stream.read())
@@ -443,23 +472,31 @@ class Auth(object):
         token  = document.find(attrs={'name': 'csrfmiddlewaretoken'}).get('value')
         #fields = parse_submit(request)
         # getting json
+        """
         cl = cherrypy.request.headers['Content-Length']
         rawbody = cherrypy.request.body.read(int(cl))
         # making a dictionaty out of raw json string. TODO make try catch, for when bad json comes
         d1 = dict(ast.literal_eval(rawbody))
-
-        params = urllib.urlencode({'email': d1.get('email'), 'csrfmiddlewaretoken': token})
-
-        stream = urllib2.urlopen(url, params)
-        result = stream.read()
-        stream.close()
-
+        """
         try:
-            result = json.loads(result)
-        except ValueError:
-            pass
+            d1 = cherrypy.request.json
+            params = urllib.urlencode({'email': d1.get('email'), 'csrfmiddlewaretoken': token})
+            print params
 
-        return result
+            stream = urllib2.urlopen(url, params)
+            result = stream.read()
+            stream.close()
+
+            try:
+                result = json.loads(result)
+            except ValueError:
+                pass
+
+            return result
+
+        except Exception as e:
+            return str(e)
+
 
     @cherrypy.expose
     @cherrypy.tools.allow(methods=['GET'])
@@ -488,8 +525,13 @@ cherrypy_cors.install()
 """
 def CORS():
     cherrypy.response.headers["Access-Control-Allow-Origin"] = "http://localhost:12314"
-    cherrypy.response.headers["Access-Control-Allow-Headers"] = "Origin, X-Requested-With, Content-Type, Accept"
+    #cherrypy.response.headers["Access-Control-Allow-Headers"] = "Origin, X-Requested-With, Content-Type, Accept"
     cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
+
+
+    cherrypy.response.headers['Connection'] = 'keep-alive'
+    cherrypy.response.headers['Access-Control-Max-Age'] = '1440'
+    cherrypy.response.headers['Access-Control-Allow-Headers'] = 'X-Auth-Token,Content-Type,Accept,csrftoken,sessionid,_ga,session_id,Origin, X-Requested-With, Content-Type, Accept'
 
 cherrypy.tools.CORS = cherrypy.Tool('before_finalize', CORS)
 
