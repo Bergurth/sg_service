@@ -71,7 +71,7 @@
       }
 
     function submitAsSignUp($form) {
-        jsn = JSON.stringify({
+        data = JSON.stringify({
             'email'    : $form.find("div.signup-ctrls [name=email]").val(),
             'username' : $form.find("div.signup-ctrls [name=username]").val(),
             'password1': $form.find("div.signup-ctrls [name=password1]").val(),
@@ -82,13 +82,18 @@
             url: 'http://localhost:12315/auth/login',
             type: 'POST',
             contentType: 'application/json',
-            data: jsn,
-            dataType: 'json',
+            data: data,
+            xhrFields: {
+                withCredentials: true
+            },
+            //dataType: 'json',
             //headers:{"Origin" : "chrome-extention://mkhojklkhkdaghjjfdnphfphiaiohkef"},
             success: function(data){
+                console.log(data);
                 console.log("device control succeeded");
             },
             error: function(){
+                console.log(data);
                 console.log("Device control failed");
             },
             //processData: false,

@@ -1,0 +1,7 @@
+# some local variables
+db_port = ""
+db_host = ""
+
+openid_url = 'http://localhost:8000/login'
+
+openid_test_user = {'username':'bergurth', 'password':'4salsa3'}
