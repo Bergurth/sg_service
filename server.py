@@ -13,7 +13,7 @@ import requests
 from BeautifulSoup import BeautifulSoup
 
 
-from localVars import db_port, db_host, openid_url_signin, openid_url_signup, openid_request_reset, openid_test_user, allowed_origins
+from localVars import db_port, db_host, openid_url_signin, openid_url_signup, openid_request_reset, openid_test_user, allowed_origins, allowed_origins_list
 
 
 if not (db_host == ""):
@@ -84,8 +84,13 @@ class Root(object):
     @cherrypy.tools.allow(methods=['POST','OPTIONS'])
     @cherrypy.tools.json_in()
     def state_update(self):
-        cherrypy.response.headers["Access-Control-Allow-Origin"] = allowed_origins
-        cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
+
+        r_origin = cherrypy.request.headers['Origin']
+        if (not r_origin in allowed_origins_list):
+            raise cherrypy.HTTPError(401)
+        else:
+            cherrypy.response.headers["Access-Control-Allow-Origin"] = r_origin
+            cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
 
         try:
             print "inside state_update"
@@ -134,16 +139,29 @@ class Auth(object):
             c1 = cherrypy.request.cookie
             for name in c1.keys():
                 print "name: %s , value: %s " % (name, str(c1[name]))
-            """
-            cherrypy.response.headers["Access-Control-Allow-Origin"] = allowed_origins
-            cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
-            cherrypy.response.headers['Connection'] = 'keep-alive'
-            cherrypy.response.headers['Access-Control-Max-Age'] = '1440'
-            cherrypy.response.headers['Access-Control-Allow-Headers'] = 'X-Auth-Token,Content-Type,Accept,csrftoken,sessionid,_ga,session_id'
-            return {}
 
-        cherrypy.response.headers["Access-Control-Allow-Origin"] = allowed_origins
-        cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
+            """
+            r_origin = cherrypy.request.headers['Origin']
+            if (not r_origin in allowed_origins_list):
+                raise cherrypy.HTTPError(401)
+            else:
+                cherrypy.response.headers["Access-Control-Allow-Origin"] = r_origin
+                cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
+
+
+                cherrypy.response.headers['Connection'] = 'keep-alive'
+                cherrypy.response.headers['Access-Control-Max-Age'] = '1440'
+                cherrypy.response.headers['Access-Control-Allow-Headers'] = 'X-Auth-Token,Content-Type,Accept,csrftoken,sessionid,_ga,session_id'
+                return {}
+
+
+        r_origin = cherrypy.request.headers['Origin']
+        if (not r_origin in allowed_origins_list):
+            raise cherrypy.HTTPError(401)
+        else:
+            cherrypy.response.headers["Access-Control-Allow-Origin"] = r_origin
+            cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
+
         cj = cookielib.CookieJar()
 
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
@@ -300,9 +318,20 @@ import cherrypy_cors
 cherrypy_cors.install()
 """
 def CORS():
-    cherrypy.response.headers["Access-Control-Allow-Origin"] = allowed_origins
+    try:
+        r_origin = cherrypy.request.headers['Origin']
+        if (not r_origin in allowed_origins_list):
+            raise cherrypy.HTTPError(401)
+        else:
+            cherrypy.response.headers["Access-Control-Allow-Origin"] = r_origin
+            cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
+    except Exception as e:
+        return str(e)
+
+
+    #cherrypy.response.headers["Access-Control-Allow-Origin"] = allowed_origins
     cherrypy.response.headers['Access-Control-Allow-Headers'] = 'X-Auth-Token,Content-Type,Accept,csrftoken,sessionid,_ga,session_id,Origin, X-Requested-With, Content-Type, Accept'
-    cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
+    #cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
     cherrypy.response.headers['Connection'] = 'keep-alive'
     cherrypy.response.headers['Access-Control-Max-Age'] = '1440'
 
