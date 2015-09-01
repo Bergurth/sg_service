@@ -49,9 +49,9 @@
               </button>
 
               <div class="btn-group">
-                <button class="btn btn-success dropdown-toggle" data-toggle="dropdown">
+                <button  class="btn btn-success dropdown-toggle" data-toggle="dropdown">
                 <span class="glyphicon glyphicon-user"></span>
-                  user.username
+                <span id="username-button"></span>
                   <span class="caret"></span>
                 </button>
                 <ul class="navbar-right dropdown-menu">
@@ -66,10 +66,10 @@
                               <li>
                               </li>
                               <li class="divider-vertical"></li>
-                              <li><a href="/leikskoli">Update Game State</a></li>
-                              <li><a href="/grunnskoli">Get Game State</a></li>
-                              <li><a href="/framhaldsskoli">somthing else</a></li>
-                              <li><a href="/framhaldsfraedsla">Alternative</a></li>
+                              <li><a id="banner-update-link"href="javascript:;">Update Game State</a></li>
+                              <li><a id="banner-ugame-link"href="javascript:;">Get Game State by username</a></li>
+                              <li><a id="user-info-link" href="" target="_blank">Get Current User Info</a></li>
+                              <li><a id="user-index-link" href="" target="_blank">Dev User Index</a></li>
                           </ul>
         </div>
       </div>
@@ -103,7 +103,7 @@
       <div class="modal-content">
         <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h3>Login</h3>
+            <h3 class="signin-ctrls">Login</h3>
         </div>
           <div class="modal-body">
             <div class="update-ctrls">
@@ -132,10 +132,26 @@
                       </div>
                   </div>
               </div>
+
+              <div class="get-ugames-ctrls">
+                  <div class="server-message">
+                      <p><strong></strong></p>
+                  </div>
+
+                  <div class="form-group">
+                      <label class="control-label">Username</label>
+                      <div class="controls">
+                          <input id="ugames-uname"name="username" type="text"/>
+                      </div>
+                  </div>
+              </div>
+
               <div class="signin-ctrls">
                   <div class="server-message">
                       <p><strong></strong></p>
                   </div>
+
+
 
                   <div class="form-group">
                       <label class="control-label">Username</label>
@@ -152,6 +168,11 @@
                   </div>
               </div>
               <div class="signup-ctrls">
+
+                <div class="server-message">
+                      <p><strong></strong></p>
+                  </div>
+
                   <div class="form-group">
                       <label class="control-label">E-Mail</label>
                       <div class="controls">
@@ -223,26 +244,25 @@
                      value="Login"/>
 
 
-              <input id="update-submit" class="btn btn-success update-ctrls" type="submit"
-                     value="Update"/>
+
 
               <a id="signin-link" class="signup-ctrls" href="javascript:;">
                   Login as registered user
               </a>
-              <a id="signin-link" class="update-ctrls" href="javascript:;">
-                  Login as registered user
-              </a>
-
               <input id="signup-submit" class="btn btn-success signup-ctrls" type="submit"
                      value="Sign Up"/>
 
-              <a id="cancel-reset-link" class="password-reset-ctrls" href="javascript:;">
+              <a id="cancel-reset-link" class="password-reset-ctrls update-ctrls" href="javascript:;">
                   Login as registered user
               </a>
-
+              <input id="update-submit" class="btn btn-success update-ctrls" type="submit"
+                     value="Update"/>
 
               <input id="password-reset-submit" class="btn btn-success password-reset-ctrls" type="submit"
                      value="Reset Password"/>
+
+            <input id="ugame-submit" class="btn btn-success get-ugames-ctrls" type="submit"
+                     value="Sign Up"/>
 
           </div>
       </div>
