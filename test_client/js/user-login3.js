@@ -263,7 +263,7 @@
             success: function(data){
                 console.log(data);
                 console.log("device control succeeded");
-                if(String(data).length >= 15){
+                if(String(data).length >= 3){
                 __onSignupFailed(data);
                 }
                 else {
