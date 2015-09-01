@@ -85,13 +85,6 @@ class Root(object):
     @cherrypy.tools.json_in()
     def state_update(self):
 
-        r_origin = cherrypy.request.headers['Origin']
-        if (not r_origin in allowed_origins_list):
-            raise cherrypy.HTTPError(401)
-        else:
-            cherrypy.response.headers["Access-Control-Allow-Origin"] = r_origin
-            cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
-
         try:
             print "inside state_update"
             data = cherrypy.request.json
@@ -141,26 +134,7 @@ class Auth(object):
                 print "name: %s , value: %s " % (name, str(c1[name]))
 
             """
-            r_origin = cherrypy.request.headers['Origin']
-            if (not r_origin in allowed_origins_list):
-                raise cherrypy.HTTPError(401)
-            else:
-                cherrypy.response.headers["Access-Control-Allow-Origin"] = r_origin
-                cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
-
-
-                cherrypy.response.headers['Connection'] = 'keep-alive'
-                cherrypy.response.headers['Access-Control-Max-Age'] = '1440'
-                cherrypy.response.headers['Access-Control-Allow-Headers'] = 'X-Auth-Token,Content-Type,Accept,csrftoken,sessionid,_ga,session_id'
-                return {}
-
-
-        r_origin = cherrypy.request.headers['Origin']
-        if (not r_origin in allowed_origins_list):
-            raise cherrypy.HTTPError(401)
-        else:
-            cherrypy.response.headers["Access-Control-Allow-Origin"] = r_origin
-            cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
+            return {}
 
         cj = cookielib.CookieJar()
 
@@ -239,26 +213,12 @@ class Auth(object):
     def openid_reset(self, email=None):
         # TODO perform reset password.
         if (cherrypy.request.method == 'OPTIONS'):
-            print "options maaaan"
-
-            c1 = cherrypy.request.cookie
-            for name in c1.keys():
-                print "name: %s , value: %s " % (name, str(c1[name]))
-
-
-            cherrypy.response.headers["Access-Control-Allow-Origin"] = allowed_origins
-            cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
-            cherrypy.response.headers['Connection'] = 'keep-alive'
-            cherrypy.response.headers['Access-Control-Max-Age'] = '1440'
-            cherrypy.response.headers['Access-Control-Allow-Headers'] = 'X-Auth-Token,Content-Type,Accept,csrftoken,sessionid,_ga,session_id'
             return {}
 
         """
         Perform a reset password feature. Asks for an email address which will be
         submitted to the openid server
         """
-        cherrypy.response.headers["Access-Control-Allow-Origin"] = allowed_origins
-        cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
 
         url       = openid_request_reset
         urlopener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.CookieJar()))
@@ -301,8 +261,6 @@ class Auth(object):
         if username:
             cherrypy.request.login = None
             #self.on_logout(username)
-            print cherrypy.session[SESSION_KEY]
-            print cherrypy.request.login
         raise cherrypy.HTTPRedirect(from_page or "/static")
 
 
@@ -329,9 +287,7 @@ def CORS():
         return str(e)
 
 
-    #cherrypy.response.headers["Access-Control-Allow-Origin"] = allowed_origins
     cherrypy.response.headers['Access-Control-Allow-Headers'] = 'X-Auth-Token,Content-Type,Accept,csrftoken,sessionid,_ga,session_id,Origin, X-Requested-With, Content-Type, Accept'
-    #cherrypy.response.headers["Access-Control-Allow-Credentials"] = "true"
     cherrypy.response.headers['Connection'] = 'keep-alive'
     cherrypy.response.headers['Access-Control-Max-Age'] = '1440'
 
@@ -342,7 +298,7 @@ import os
 cwd = os.getcwd()
 path_client = os.path.abspath(os.path.dirname('/test_client/test_client_basic.html'))
 stat_path = cwd + path_client
-print stat_path
+
 
 class Static(object):pass
 
