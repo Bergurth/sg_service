@@ -176,9 +176,10 @@ class Auth(object):
                 try:
                     cherrypy.session[SESSION_KEY] = openid_user['username']
                     # following line is for debuging purposes, could return somthing else ..like {}
-                    return openid_user['username'], cherrypy.session[SESSION_KEY]
-                except Exception as fart:
-                    return str(fart)
+                    #return openid_user['username'], cherrypy.session[SESSION_KEY]
+                    return {}
+                except Exception as err:
+                    return str(err)
 
 
             else:
