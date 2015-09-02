@@ -253,6 +253,17 @@ class Auth(object):
 
 
     @cherrypy.expose
+    @cherrypy.tools.allow(methods=['GET','OPTIONS'])
+    def username(self):
+        sess = cherrypy.session
+        username = sess.get(SESSION_KEY, None)
+        if username:
+            return username
+        else:
+            return {}
+
+
+    @cherrypy.expose
     @cherrypy.tools.allow(methods=['GET'])
     def logout(self, from_page=None):
         sess = cherrypy.session
