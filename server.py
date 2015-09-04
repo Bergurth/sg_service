@@ -68,13 +68,20 @@ class Root(object):
     @login_required
     @cherrypy.tools.allow(methods=['GET'])
     # TODO add case for state of particular game.
-    def user(self, username=None):
+    def user(self, username=None, gamename=None):
         sess = cherrypy.session
         ses_uname = sess.get(SESSION_KEY, None)
+        #   db.users.find({"username":"fred"},{"savedGames.pong":1})
         if (username == ses_uname):
             uqstring = re.sub('[$,#,<,>,{,}]','',username) # cleaning string
-            output = db.users.find({"username":uqstring})
-            return dumps(output)
+            if (gamename):
+                # returning for specific game.  .. todo test
+                gqstring = re.sub('[$,#,<,>,{,}]','',gamename) # cleaning string
+                output = db.users.find({"username":uqstring},{"savedGames."+gamename:1})
+                return dumps(output)
+            else:
+                output = db.users.find({"username":uqstring})
+                return dumps(output)
         else:
             return "not logged in"
 

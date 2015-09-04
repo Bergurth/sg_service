@@ -4,6 +4,8 @@ bin/
 lib/
 pid
 
+fred.py
+
 app.py
 
 autostart.cgi~
